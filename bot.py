@@ -151,20 +151,10 @@ async def ping(ctx):
         cern = sum(torn)
         turn2 = int(cern)
         
-        mathping = 2
         gameover = 0
-        
-        if mathping != 2:
-            gameover = random.randint(1,10)
-            
-        else:
-            pass
                 
         if isplaying2 == 1 and opponentid2 != ctx.user.id and turn2 == 0:
             await ctx.respond("Sorry, but it's not your turn.")
-            
-        elif iscounting == 1:
-            await ctx.respond("Sorry, but you have to solve the math problem.")
             
         elif isplaying2 == 1 and opponentid2 != ctx.user.id and turn2 == 1 and gameover == 6:
             await ctx.respond(f"OOF! You've missed the shot and your opponent is the winner! Congratulations, <@{opponentid2}>!")
