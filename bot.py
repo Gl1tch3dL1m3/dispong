@@ -151,7 +151,7 @@ async def ping(ctx):
         cern = sum(torn)
         turn2 = int(cern)
         
-        gameover = random.randint(1,12)
+        gameover = random.randint(1,10)
                 
         if isplaying2 == 1 and opponentid2 != ctx.user.id and turn2 == 0:
             await ctx.respond("Sorry, but it's not your turn.")
@@ -168,7 +168,6 @@ async def ping(ctx):
             await ctx.respond("Pong!")
         
     except Exception as e:
-        print(e)
         await ctx.respond("Sorry, but you are not playing with anyone.")
         
 @bot.slash_command(description="Get started with DisPong!")
