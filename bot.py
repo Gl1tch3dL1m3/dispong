@@ -10,6 +10,10 @@ bot = discord.Bot(help_command = None)
 
 guild_id = [993011300147920896]
 
+@bot.event
+async def on_ready():
+    print(f"{bot.user} is ready!")
+
 @bot.slash_command(description = "Start playing Ping Pong with someone.")
 async def newgame(ctx, player_2: Option(discord.Member, "Select your opponent.", required=True)):
     con = sq.connect('datas.db')
@@ -144,10 +148,6 @@ async def ping(ctx):
         opponentid2 = int(obntid)
         
         torn = curso.execute(f"""SELECT turn FROM `{ctx.user.id}`""").fetchone()
-        cern = sum(torn)
-        turn2 = int(cern)
-        
-        torn = curso.execute(f"""SELECT turn FROM `math{ctx.user.id}`""").fetchone()
         cern = sum(torn)
         turn2 = int(cern)
         
