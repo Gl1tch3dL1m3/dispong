@@ -8,8 +8,6 @@ import random
 
 bot = discord.Bot(help_command = None)
 
-guild_id = [993011300147920896]
-
 @bot.event
 async def on_ready():
     print(f"{bot.user} is ready!")
