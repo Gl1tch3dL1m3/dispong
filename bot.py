@@ -151,7 +151,7 @@ async def ping(ctx):
         cern = sum(torn)
         turn2 = int(cern)
         
-        gameover = 0
+        gameover = random.randint(1,12)
                 
         if isplaying2 == 1 and opponentid2 != ctx.user.id and turn2 == 0:
             await ctx.respond("Sorry, but it's not your turn.")
