@@ -161,7 +161,7 @@ async def ping(ctx):
             curso.execute(f"""DROP TABLE `{ctx.user.id}`""")
             curso.execute(f"""DROP TABLE `{opponentid2}`""")
             
-        elif isplaying2 == 1 and opponentid2 != ctx.user.id and turn2 == 1 and gameover != 6 and mathping != 2:
+        elif isplaying2 == 1 and opponentid2 != ctx.user.id and turn2 == 1 and gameover != 6:
             curso.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
             curso.execute(f"""UPDATE `{opponentid2}` SET turn=1""")
             conne.commit()
