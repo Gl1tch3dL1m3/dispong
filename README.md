@@ -1,4 +1,4 @@
-# DisPong
+# DisPong v1.1
 Welcome to DisPong's code!
 
 * You are allowed to use, modify and do whatever you want with this code, but do not steal it!
