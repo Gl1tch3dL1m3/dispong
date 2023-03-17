@@ -202,7 +202,7 @@ async def ping(ctx):
                 consoleclear()
                 
             elif isplaying2 == 1 and opponentid2 != ctx.user.id and turn2 == 1 and gameover == 6:
-                await ctx.respond(f"{ctx.user.id}: OOF! You've missed the shot and your opponent is the winner! Congratulations, <@{opponentid2}>! **Game over!** 🏆")
+                await ctx.respond(f"OOF! You've missed the shot and your opponent is the winner! Congratulations, <@{opponentid2}>! **Game over!** 🏆")
                 curso.execute(f"""DROP TABLE `{ctx.user.id}`""")
                 curso.execute(f"""DROP TABLE `{opponentid2}`""")
                 consoleclear()
