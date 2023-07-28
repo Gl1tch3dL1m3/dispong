@@ -29,7 +29,7 @@ async def on_ready():
 # Console clear (Linux: replace 'cls' with 'clear')
 
 def consoleclear():
-    os.system("cls")
+    os.system("clear")
     
 # New game command
 
@@ -99,7 +99,7 @@ async def duel(ctx, opponent: Option(discord.Member, "Select your opponent.", re
                                     upd += 1
                                     curs2.execute(f"""UPDATE main SET currentgames={upd}""")
                                     await interaction.message.delete()
-                                    await interaction.response.send_message(f"Okay! <@{ctx.user.id}> starts! Type **/ping** to play! Enjoy your playing! <:tickpong:1134110509872984095>")
+                                    await interaction.response.send_message(f"Okay! <@{ctx.user.id}> starts! Type </ping:999267081629487196> to play! Enjoy your playing! <:tickpong:1134110509872984095>")
                                     con.commit()
                                     con.close()
                                     conn2.commit()
@@ -186,7 +186,7 @@ async def duel(ctx, opponent: Option(discord.Member, "Select your opponent.", re
                     view.add_item(redbtn)
                     view.add_item(greybtn)
                             
-                    await ctx.respond(f"<@{player_2.id}>\n\nDo you want to play with <@{ctx.user.id}>? If <@{ctx.user.id}> would like to delete request, use **/finish** or press **Delete Request** button! <:circlepong:1134110288438894654>", view=view)
+                    await ctx.respond(f"<@{player_2.id}>\n\nDo you want to play with <@{ctx.user.id}>? If <@{ctx.user.id}> would like to delete request, use </finish:999267081629487195> or press **Delete Request** button! <:circlepong:1134110288438894654>", view=view)
 
 # Finish command
                     
@@ -344,6 +344,13 @@ async def ping(ctx):
                                 await interaction.message.edit(f"Player: 🪨\nBot: ✂️\n\nPlayer won! Bot missed the shot, so <@{ctx.user.id}> has won this match! **Game over!** 🏆")
                                 cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
                                 conn.commit()
+                                upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd -= 1
+                                cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                conn2.commit()
+                                conn2.close()
 
                                 await interaction.response.defer()
 
@@ -397,14 +404,14 @@ async def ping(ctx):
 
                         elif rps1 == 4 and rps2 == 3:
                             await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: ✂️\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆")
-                            upd1 = cur2.execute(f"""SELECT totalgames FROM main""").fetchone()
+                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                            cur.execute(f"""DROP TABLE `{opponentid}`""")
+                            conn.commit()
+                            upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
                             upd2 = sum(upd1)
                             upd = int(upd2)
-                            upd += 1
-                            cur2.execute(f"""UPDATE main SET totalgames={upd}""")
-                            cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                            cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
-                            conn.commit()
+                            upd -= 1
+                            cur2.execute(f"""UPDATE main SET currentgames={upd}""")
                             conn2.commit()
                             conn2.close()
                             await interaction.response.defer()
@@ -511,6 +518,13 @@ async def ping(ctx):
                                 await interaction.message.edit(f"Player: ✂️\nBot: 📜\n\nPlayer won! Bot missed the shot, so <@{ctx.user.id}> has won this match! **Game over!** 🏆")
                                 cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
                                 conn.commit()
+                                upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd -= 1
+                                cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                conn2.commit()
+                                conn2.close()
 
                                 await interaction.response.defer()
 
@@ -560,14 +574,14 @@ async def ping(ctx):
 
                         elif rps1 == 5 and rps2 == 4:
                             await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: 📜\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆")
-                            upd1 = cur2.execute(f"""SELECT totalgames FROM main""").fetchone()
+                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                            cur.execute(f"""DROP TABLE `{opponentid}`""")
+                            conn.commit()
+                            upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
                             upd2 = sum(upd1)
                             upd = int(upd2)
-                            upd += 1
-                            cur2.execute(f"""UPDATE main SET totalgames={upd}""")
-                            cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                            cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
-                            conn.commit()
+                            upd -= 1
+                            cur2.execute(f"""UPDATE main SET currentgames={upd}""")
                             conn2.commit()
                             conn2.close()
                             await interaction.response.defer()
@@ -575,7 +589,7 @@ async def ping(ctx):
                         cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
                         cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
                         conn.close()
-                    
+                        
                     else:
                         await interaction.response.send_message("Sorry, but it's not your turn or you're not playing! <:crosspong:1134110291311992962>", ephemeral=True)
 
@@ -613,12 +627,19 @@ async def ping(ctx):
                         else:
                             cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=5""")
 
-                            gennum = 2 #random.randint(1,3)
+                            gennum = random.randint(1,3)
 
                             if gennum == 1:
                                 await interaction.message.edit(f"Player: 📜\nBot: 🪨\n\nPlayer won! Bot missed the shot, so <@{ctx.user.id}> has won this match! **Game over!** 🏆")
                                 cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
                                 conn.commit()
+                                upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd -= 1
+                                cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                conn2.commit()
+                                conn2.close()
 
                                 await interaction.response.defer()
 
@@ -690,13 +711,13 @@ async def ping(ctx):
 
                         elif rps1 == 3 and rps2 == 5:
                             await interaction.message.edit(f"Player 1:📜\nPlayer 2: 🪨\n\nPlayer 2 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆")
-                            upd1 = cur2.execute(f"""SELECT totalgames FROM main""").fetchone()
+                            upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
                             upd2 = sum(upd1)
                             upd = int(upd2)
-                            upd += 1
-                            cur2.execute(f"""UPDATE main SET totalgames={upd}""")
-                            cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                            cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
+                            upd -= 1
+                            cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                            cur.execute(f"""DROP TABLE `{opponentid}`""")
                             conn.commit()
                             conn2.commit()
                             conn2.close()
@@ -903,7 +924,6 @@ async def ping(ctx):
     except Exception as e:
         await ctx.respond("Sorry, but you are not playing with anyone. <:crosspong:1134110291311992962>")
         consoleclear()
-        print(e)
    
 # Singleplayer command
    
@@ -941,19 +961,19 @@ async def singleplayer(ctx):
         conn2.close()
         consoleclear()
         
-        await ctx.respond("So, you want to play with me? Alright! You start first. Type </ping:1126827908380512296> to start playing! <:tickpong:1134110509872984095>")
+        await ctx.respond("So, you want to play with me? Alright! You start first. Type </ping:999267081629487196> to start playing! <:tickpong:1134110509872984095>")
         
 # Help command        
 
 @bot.slash_command(description="Get started playing with DisPong!")
 async def help(ctx):
-    await ctx.respond("Hey! I'm **DisPong**! I was created by Gl1tch3dL1m3...he coded me in Python with Pycord library! Anyways, I hope you will have fun with me! Come on! Invite someone to play by typing </duel:1126827907877191763>!\n\nHow to play? Just type </ping:1126827908380512296>...command author starts first..then command author's opponent and so on! My commands are:\n</help:1126827908380512298> - This message\n</ping:1126827908380512296> - Play Ping Pong!\n</duel:1126827907877191763> - Start new game with antoher player! (this was **/newgame** before, but there will be (maybe :D) 4 players match and this is going to be **/newgame** command!)\n</finish:1126827907877191764> - Delete your request or finish a game!\n</singleplayer:1126827908380512297> - Play with DisPong!\n</changelog:1126827908380512299> - DisPong updates log!\n</stats:1126827908380512300> - Games statistics!\n\n*You may encounter bugs with __v1.2__ update. If this happens, please report it to the support server (preferably with a screenshot). Thanks!*\n\nOk, that's all! If you need some help, want to report a bug, suggest something, or just want to play with others, join our support server: https://discord.gg/dduRC6cdy3")
+    await ctx.respond("Hey! I'm **DisPong**! I was created by Gl1tch3dL1m3...he coded me in Python with Pycord library! Anyways, I hope you will have fun with me! Come on! Invite someone to play by typing </duel:1085970985552978033>!\n\nHow to play? Just type </ping:999267081629487196>...command author starts first..then command author's opponent and so on! My commands are:\n</help:999334780732719244> - This message\n</ping:999267081629487196> - Play Ping Pong!\n</duel:1085970985552978033> - Start new game with antoher player! (this was **/newgame** before, but there will be (maybe :D) 4 players match and this is going to be **/newgame** command!)\n</finish:999267081629487195> - Delete your request or finish a game!\n</singleplayer:1085970985552978034> - Play with DisPong!\n</changelog:1085970985552978035> - DisPong updates log!\n</stats:1134139510070980648> - Games statistics!\n\n*You may encounter bugs with __v1.2__ update. If this happens, please report it to the support server (preferably with a screenshot). Thanks!*\n\nOk, that's all! If you need some help, want to report a bug, suggest something, or just want to play with others, join our support server: https://discord.gg/dduRC6cdy3")
     
 # Changelog command
 
 @bot.slash_command(description="DisPong updates log.")
 async def changelog(ctx):
-    await ctx.respond("__v1.1__: Added Singleplayer and better looking responses.\n__v1.2__: Added RPS minigame, games statistics and custom emojis (more emojis are going to be added soon). Fixed some bugs in </duel:1126827907877191763> command.\n\n*More comming soon!*")
+    await ctx.respond("__v1.1__: Added Singleplayer and better looking responses.\n__v1.2__: Added RPS minigame, games statistics and custom emojis (more emojis are going to be added soon). Fixed some bugs in </duel:1085970985552978033> command.\n\n*More comming soon!*")
     
 # Statistics command
 
@@ -983,5 +1003,6 @@ async def stats(ctx):
     await ctx.respond(f"__Statistics:__\nTotal games played: {totalgames}\nCurrent games playing: {currentgames}\nCurrent singleplayer games: {botgames}\nTotal balls pinged: {ballspinged}")
 
     conn.close()
-
+    consoleclear()
+    
 bot.run(token)
