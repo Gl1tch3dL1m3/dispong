@@ -29,7 +29,7 @@ async def on_ready():
 # Console clear (Linux: replace 'cls' with 'clear')
 
 def consoleclear():
-    os.system("clear")
+    os.system("cls")
     
 # New game command
 
