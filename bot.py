@@ -1,6 +1,6 @@
 ###### DisPong by @glitchedlime ######
 
-# Last changes: 27. July 2023
+# Last changes: 1. August 2023
 # Commands count: 7
 # Bot's version: v.1.2
 
@@ -843,7 +843,7 @@ async def ping(ctx):
                     await rps()
 
         else:
-            if gameover != 6 and isplaying2 == 1:
+            if isplaying2 == 1:
                 gameover2 = random.randint(1,15)
                 rpsgen = random.randint(5,7)
 
@@ -851,7 +851,11 @@ async def ping(ctx):
                 ctxrps2 = sum(ctxrps1)
                 ctxrps = int(ctxrps2)
                 
-                if isfirstping == 0:
+                isfirstping1 = curso.execute(f"""SELECT isfirstping FROM `{ctx.user.id}`""").fetchone()
+                isfirstping2 = sum(isfirstping1)
+                isfirstping = int(isfirstping2)
+                
+                if isfirstping == 0 and ctxrps == 0:
                     curso.execute(f"""UPDATE `{ctx.user.id}` SET isfirstping=1""")
                     await ctx.respond(":person_raising_hand:: Pong! 🏓")
                     await ctx.respond(":robot:: Pong! 🏓")
@@ -888,25 +892,43 @@ async def ping(ctx):
                     conne.close()
                     connn2.close()
                     
-                else:
-                    await ctx.respond(":person_raising_hand:: Pong! 🏓")
-                    await ctx.respond(f":robot:: OOF! I've missed the shot and you won! Congratultions, <@{ctx.user.id}>! **Game over!** 🏆")
-                    curso.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                    upd1 = curs2.execute(f"""SELECT botgames FROM main""").fetchone()
-                    upd2 = sum(upd1)
-                    upd = int(upd2)
-                    upd -= 1
-                    curs2.execute(f"""UPDATE main SET botgames={upd}""")
-                    upd1 = curs2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                    upd2 = sum(upd1)
-                    upd = int(upd2)
-                    upd += 1
-                    curs2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                    connn2.commit()
-                    connn2.close()
-                    conne.commit()
-                    conne.close()
-                    consoleclear()
+                elif gameover2 == 6 and rpsgen == 6:
+                    gennum = random.randint(1,2)
+
+                    if gennum == 1:
+                        await ctx.respond(":person_raising_hand:: OOF! You've missed the shot, so :robot: won! Better luck next time! **Game over!** 🏆")
+                        curso.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                        upd1 = curs2.execute(f"""SELECT botgames FROM main""").fetchone()
+                        upd2 = sum(upd1)
+                        upd = int(upd2)
+                        upd -= 1
+                        curs2.execute(f"""UPDATE main SET botgames={upd}""")
+                        connn2.commit()
+                        connn2.close()
+                        conne.commit()
+                        conne.close()
+                        consoleclear()
+
+                    else:
+                        await ctx.respond(":person_raising_hand:: Pong! 🏓")
+                        await ctx.respond(f":robot:: OOF! I've missed the shot and you won! Congratultions, <@{ctx.user.id}>! **Game over!** 🏆")
+                        curso.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                        upd1 = curs2.execute(f"""SELECT botgames FROM main""").fetchone()
+                        upd2 = sum(upd1)
+                        upd = int(upd2)
+                        upd -= 1
+                        curs2.execute(f"""UPDATE main SET botgames={upd}""")
+                        upd1 = curs2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                        upd2 = sum(upd1)
+                        upd = int(upd2)
+                        upd += 1
+                        curs2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                        connn2.commit()
+                        connn2.close()
+                        conne.commit()
+                        conne.close()
+                        consoleclear()
+                    
             else:
                 await ctx.respond(":person_raising_hand:: OOF! You've missed the shot, so :robot: won! Better luck next time! **Game over!** 🏆")
                 curso.execute(f"""DROP TABLE `{ctx.user.id}`""")
