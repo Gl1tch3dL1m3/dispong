@@ -1,6 +1,6 @@
 ###### DisPong by @glitchedlime ######
 
-# Last changes: 27. July 2023
+# Last changes: 2. August 2023
 # Commands count: 7
 # Bot's version: v.1.2
 
