@@ -1,6 +1,6 @@
 ###### DisPong by @glitchedlime ######
 
-# Last changes: 2. August 2023
+# Last changes: 4. August 2023
 # Commands count: 7
 # Bot's version: v.1.2
 
@@ -382,12 +382,14 @@ async def ping(ctx):
                             rps12 = sum(rps11)
                             rps1 = int(rps12)
 
-                            if rpsbot == 6:
-                                rps21 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
-                                rps22 = sum(rps21)
-                                rps2 = int(rps22)
+                            rps21 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
+                            rps22 = sum(rps21)
+                            rps2 = int(rps22)
 
-                            if rps1 == 3 and rps2 == 3:
+                            print(rps1)
+                            print(rps2)
+
+                            if rps2 == 3 and rps1 == 3:
                                 await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: 🪨\n\nDraw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛")
                                 cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
                                 cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
@@ -403,22 +405,8 @@ async def ping(ctx):
                                 conn2.close()
                                 await interaction.response.defer()
 
-                            elif rps1 == 4 and rps2 == 3:
-                                await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: ✂️\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆")
-                                cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                conn.commit()
-                                upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
-                                upd2 = sum(upd1)
-                                upd = int(upd2)
-                                upd -= 1
-                                cur2.execute(f"""UPDATE main SET currentgames={upd}""")
-                                conn2.commit()
-                                conn2.close()
-                                await interaction.response.defer()
-
-                            elif rps1 == 5 and rps2 == 3:
-                                await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: 📜\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓")
+                            elif rps2 == 3 and rps1 == 4:
+                                await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: 🪨\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓")
                                 cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
                                 cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
                                 cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
@@ -429,6 +417,20 @@ async def ping(ctx):
                                 upd = int(upd2)
                                 upd += 1
                                 cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
+
+                            elif rps2 == 3 and rps1 == 5:
+                                await interaction.message.edit(f"Player 1: 📜\nPlayer 2: 🪨\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆")
+                                cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                conn.commit()
+                                upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd -= 1
+                                cur2.execute(f"""UPDATE main SET currentgames={upd}""")
                                 conn2.commit()
                                 conn2.close()
                                 await interaction.response.defer()
@@ -545,7 +547,7 @@ async def ping(ctx):
                             rps22 = sum(rps21)
                             rps2 = int(rps22)
 
-                            if rps1 == 4 and rps2 == 4:
+                            if rps2 == 4 and rps1 == 4:
                                 await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: ✂️\n\nDraw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛")
                                 cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
                                 cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
@@ -561,8 +563,22 @@ async def ping(ctx):
                                 conn2.close()
                                 await interaction.response.defer()
 
-                            elif rps1 == 3 and rps2 == 4:
-                                await interaction.message.edit(f"Player 1: ✂️ 🪨\nPlayer 2: 🪨\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓")
+                            elif rps2 == 4 and rps1 == 3:
+                                await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: ✂️\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆")
+                                cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                conn.commit()
+                                upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd -= 1
+                                cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
+
+                            elif rps2 == 4 and rps1 == 5:
+                                await interaction.message.edit(f"Player 1: 📜\nPlayer 2: ✂️\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓")
                                 cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
                                 cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
                                 cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
@@ -573,20 +589,6 @@ async def ping(ctx):
                                 upd = int(upd2)
                                 upd += 1
                                 cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                conn2.commit()
-                                conn2.close()
-                                await interaction.response.defer()
-
-                            elif rps1 == 5 and rps2 == 4:
-                                await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: 📜\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆")
-                                cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                conn.commit()
-                                upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
-                                upd2 = sum(upd1)
-                                upd = int(upd2)
-                                upd -= 1
-                                cur2.execute(f"""UPDATE main SET currentgames={upd}""")
                                 conn2.commit()
                                 conn2.close()
                                 await interaction.response.defer()
@@ -702,7 +704,7 @@ async def ping(ctx):
                             rps22 = sum(rps21)
                             rps2 = int(rps22)
                             
-                            if rps1 == 5 and rps2 == 5:
+                            if rps2 == 5 and rps1 == 5:
                                 await interaction.message.edit(f"Player 1: 📜\nPlayer 2: 📜\n\nDraw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛")
                                 cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
                                 cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
@@ -718,8 +720,8 @@ async def ping(ctx):
                                 conn2.close()
                                 await interaction.response.defer()
 
-                            elif rps1 == 3 and rps2 == 5:
-                                await interaction.message.edit(f"Player 1:📜\nPlayer 2: 🪨\n\nPlayer 2 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆")
+                            elif rps2 == 5 and rps1 == 4:
+                                await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: 📜\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆")
                                 upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
                                 upd2 = sum(upd1)
                                 upd = int(upd2)
@@ -732,8 +734,8 @@ async def ping(ctx):
                                 conn2.close()
                                 await interaction.response.defer()
 
-                            elif rps1 == 4 and rps2 == 5:
-                                await interaction.message.edit(f"Player 1:📜\nPlayer 2: ✂️\n\nPlayer 1 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓")
+                            elif rps2 == 5 and rps1 == 3:
+                                await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: 📜\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓")
                                 cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
                                 cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
                                 cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
@@ -954,7 +956,7 @@ async def ping(ctx):
                 conne.close()
                 consoleclear()
         
-    except Exception as e:
+    except:
         await ctx.respond("Sorry, but you are not playing with anyone. <:crosspong:1134110291311992962>")
         consoleclear()
    
