@@ -9,10 +9,6 @@
 
 # Feel free to use this script, but don't steal it (selling, pretending to be creator of this script, etc.)!
 
-# TO DO:
-# - GitHub
-# - top.gg a iné
-
 import discord
 from discord import Option
 import sqlite3 as sq
@@ -367,7 +363,6 @@ async def ping(ctx):
                                     cur.execute(f"""UPDATE `{opponentid}` SET rps=2""")
                                     conn.commit()
                                     await interaction.message.edit(f"Okay! Now it's <@{opponentid}>'s turn to choose! 👉")
-                                    print(self.message.id)
                                     await interaction.response.defer()
                                 else:
                                     cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=3""")
@@ -438,9 +433,6 @@ async def ping(ctx):
                                 rps21 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
                                 rps22 = sum(rps21)
                                 rps2 = int(rps22)
-
-                                #print(rps1)
-                                #print(rps2)
 
                                 if rps2 == 3 and rps1 == 3:
                                     self.disable_all_items()
@@ -943,7 +935,6 @@ async def ping(ctx):
                         if interactiontttturn == 2:
                             if interaction.user.id == ctx.user.id or interaction.user.id == opponentid:
                                 if minigameid == self.message.id:
-                                    print(f"inter: {interactiontttturn}")
                                     needdefer = True
                                     anywin = True
                                     if select.values[0] == "1":
@@ -954,11 +945,9 @@ async def ping(ctx):
                                             if tttgame[0] == 1:
                                                 if tttbot == 3:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[0] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
@@ -966,11 +955,9 @@ async def ping(ctx):
                                                         conn.commit()
 
                                                     elif interaction.user.id == opponentid:
-                                                        print(tttgame[0])
                                                         tttgame[0] = 3
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
@@ -979,12 +966,9 @@ async def ping(ctx):
 
                                                 else:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[0] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
-                                                        print(ctx.user.id)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
@@ -997,7 +981,6 @@ async def ping(ctx):
                                             else:
                                                 await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
                                                 needdefer = False
-                                                print(tttgame[0])
 
                                     if select.values[0] == "2":
                                             tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
@@ -1007,11 +990,9 @@ async def ping(ctx):
                                             if tttgame[1] == 1:
                                                 if tttbot == 3:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[1])
                                                         tttgame[1] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
@@ -1019,11 +1000,9 @@ async def ping(ctx):
                                                         conn.commit()
 
                                                     elif interaction.user.id == opponentid:
-                                                        print(tttgame[1])
                                                         tttgame[1] = 3
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
@@ -1031,12 +1010,9 @@ async def ping(ctx):
                                                         conn.commit()
                                                 else:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[1] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
-                                                        print(ctx.user.id)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
@@ -1049,7 +1025,6 @@ async def ping(ctx):
                                             else:
                                                 await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
                                                 needdefer = False
-                                                print(tttgame[1])
 
                                     if select.values[0] == "3":
                                             tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
@@ -1059,11 +1034,9 @@ async def ping(ctx):
                                             if tttgame[2] == 1:
                                                 if tttbot == 3:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[2])
                                                         tttgame[2] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
@@ -1071,11 +1044,9 @@ async def ping(ctx):
                                                         conn.commit()
 
                                                     elif interaction.user.id == opponentid:
-                                                        print(tttgame[2])
                                                         tttgame[2] = 3
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
@@ -1083,12 +1054,9 @@ async def ping(ctx):
                                                         conn.commit()
                                                 else:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[2] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
-                                                        print(ctx.user.id)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
@@ -1101,8 +1069,7 @@ async def ping(ctx):
                                             else:
                                                 await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
                                                 needdefer = False
-                                                print(tttgame[2])
-
+                                                
                                     if select.values[0] == "4":
                                             tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
                                             tttgame = int(''.join(map(str, tttgame1)))
@@ -1111,11 +1078,9 @@ async def ping(ctx):
                                             if tttgame[3] == 1:
                                                 if tttbot == 3:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[3])
                                                         tttgame[3] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
@@ -1123,11 +1088,9 @@ async def ping(ctx):
                                                         conn.commit()
 
                                                     elif interaction.user.id == opponentid:
-                                                        print(tttgame[3])
                                                         tttgame[3] = 3
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
@@ -1136,12 +1099,9 @@ async def ping(ctx):
 
                                                 else:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[3] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
-                                                        print(ctx.user.id)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
@@ -1154,8 +1114,7 @@ async def ping(ctx):
                                             else:
                                                 await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
                                                 needdefer = False
-                                                print(tttgame[3])
-
+                                                
                                     if select.values[0] == "5":
                                             tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
                                             tttgame = int(''.join(map(str, tttgame1)))
@@ -1164,11 +1123,9 @@ async def ping(ctx):
                                             if tttgame[4] == 1:
                                                 if tttbot == 3:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[4])
                                                         tttgame[4] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
@@ -1176,11 +1133,9 @@ async def ping(ctx):
                                                         conn.commit()
 
                                                     elif interaction.user.id == opponentid:
-                                                        print(tttgame[4])
                                                         tttgame[4] = 3
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
@@ -1189,12 +1144,9 @@ async def ping(ctx):
 
                                                 else:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[4] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
-                                                        print(ctx.user.id)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
@@ -1207,7 +1159,6 @@ async def ping(ctx):
                                             else:
                                                 await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
                                                 needdefer = False
-                                                print(tttgame[4])
 
                                     if select.values[0] == "6":
                                             tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
@@ -1217,11 +1168,9 @@ async def ping(ctx):
                                             if tttgame[5] == 1:
                                                 if tttbot == 3:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[5])
                                                         tttgame[5] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
@@ -1229,11 +1178,9 @@ async def ping(ctx):
                                                         conn.commit()
 
                                                     elif interaction.user.id == opponentid:
-                                                        print(tttgame[5])
                                                         tttgame[5] = 3
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
@@ -1242,12 +1189,9 @@ async def ping(ctx):
 
                                                 else:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[5] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
-                                                        print(ctx.user.id)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
@@ -1260,7 +1204,6 @@ async def ping(ctx):
                                             else:
                                                 await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
                                                 needdefer = False
-                                                print(tttgame[5])
 
                                     if select.values[0] == "7":
                                             tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
@@ -1270,11 +1213,9 @@ async def ping(ctx):
                                             if tttgame[6] == 1:
                                                 if tttbot == 3:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[6])
                                                         tttgame[6] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
@@ -1282,11 +1223,9 @@ async def ping(ctx):
                                                         conn.commit()
 
                                                     elif interaction.user.id == opponentid:
-                                                        print(tttgame[6])
                                                         tttgame[6] = 3
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
@@ -1295,12 +1234,9 @@ async def ping(ctx):
 
                                                 else:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[6] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
-                                                        print(ctx.user.id)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
@@ -1313,7 +1249,6 @@ async def ping(ctx):
                                             else:
                                                 await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
                                                 needdefer = False
-                                                print(tttgame[6])
 
                                     if select.values[0] == "8":
                                             tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
@@ -1323,11 +1258,9 @@ async def ping(ctx):
                                             if tttgame[7] == 1:
                                                 if tttbot == 3:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[7])
                                                         tttgame[7] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
@@ -1335,11 +1268,9 @@ async def ping(ctx):
                                                         conn.commit()
 
                                                     elif interaction.user.id == opponentid:
-                                                        print(tttgame[7])
                                                         tttgame[7] = 3
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
@@ -1348,12 +1279,9 @@ async def ping(ctx):
 
                                                 else:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[7] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
-                                                        print(ctx.user.id)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
@@ -1366,7 +1294,6 @@ async def ping(ctx):
                                             else:
                                                 await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
                                                 needdefer = False
-                                                print(tttgame[7])
 
                                     if select.values[0] == "9":
                                             tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
@@ -1376,11 +1303,9 @@ async def ping(ctx):
                                             if tttgame[8] == 1:
                                                 if tttbot == 3:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[8])
                                                         tttgame[8] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
@@ -1388,11 +1313,9 @@ async def ping(ctx):
                                                         conn.commit()
 
                                                     elif interaction.user.id == opponentid:
-                                                        print(tttgame[8])
                                                         tttgame[8] = 3
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
@@ -1401,12 +1324,9 @@ async def ping(ctx):
 
                                                 else:
                                                     if interaction.user.id == ctx.user.id:
-                                                        print(tttgame[0])
                                                         tttgame[8] = 2
                                                         tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
                                                         tttgameint = int(tttgameint)
-                                                        print(tttgameint)
-                                                        print(ctx.user.id)
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
                                                         cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
@@ -1419,7 +1339,6 @@ async def ping(ctx):
                                             else:
                                                 await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
                                                 needdefer = False
-                                                print(tttgame[8])
 
                                     # "<:one1:1164986232841982003>"
                                     # "<:two2:1164986146539970632>"
@@ -2130,7 +2049,6 @@ async def ping(ctx):
 
                                             # If there is nothing to do and there are some empty place(s), pick a random empty field...
                                             elif 1 in tttgame:
-                                                print("else")
                                                 while True:
                                                     i = random.randint(0,8)
                                                     if tttgame[i] == 1:
@@ -2601,7 +2519,7 @@ async def ping(ctx):
             conn.commit()
             conn.close()
 
-        except Exception as e:
+        except:
             # I'll use this to print errors.
             pass
     
@@ -2632,10 +2550,6 @@ async def ping(ctx):
 
         gameover = random.randint(6,25)
         gamegen = 5#random.randint(3,7)
-
-        print(tttturn)
-        print(gameover)
-        print(gamegen)
 
         if isplaying2 == 1:
             if opponentid2 != bot.user.id:
@@ -2705,7 +2619,6 @@ async def ping(ctx):
                     conne.close()
                     connn2.commit()
                     connn2.close()
-                    print(upd)
                     await ttt()
                     
                 elif isplaying2 == 1 and opponentid2 != ctx.user.id and turn2 == 1:
@@ -2823,8 +2736,7 @@ async def ping(ctx):
             conne.close()
             connn2.close()
         
-    except Exception as e:
-        print(e)
+    except:
         await ctx.respond("Sorry, but you are not playing with anyone. <:crosspong:1134110291311992962>", ephemeral=True)
         consoleclear()
    
