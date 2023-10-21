@@ -17,7 +17,7 @@
 import discord
 from discord import Option
 import sqlite3 as sq
-from configold import token
+from config import token
 import random
 import os
 
