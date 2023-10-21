@@ -2681,6 +2681,7 @@ async def ping(ctx):
                     upd += 1
                     curs2.execute(f"""UPDATE main SET rpsgames={upd}""")
                     conne.close()
+                    connn2.commit()
                     connn2.close()
                     await rps()
 
@@ -2691,6 +2692,7 @@ async def ping(ctx):
                     upd += 1
                     curs2.execute(f"""UPDATE main SET tttgames={upd}""")
                     conne.close()
+                    connn2.commit()
                     connn2.close()
                     await ttt()
                     
