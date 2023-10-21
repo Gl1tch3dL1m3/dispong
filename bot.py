@@ -2549,7 +2549,7 @@ async def ping(ctx):
         tttturn = int(ttt2)
 
         gameover = random.randint(6,25)
-        gamegen = 5#random.randint(3,7)
+        gamegen = random.randint(3,7)
 
         if isplaying2 == 1:
             if opponentid2 != bot.user.id:
