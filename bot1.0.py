@@ -10,10 +10,6 @@
 
 # Feel free to use this script, but don't steal it (selling, pretending to be creator of this script, etc.)!
 
-
-
-# EMOJIS
-
 import discord
 from discord import Option
 import sqlite3 as sq
