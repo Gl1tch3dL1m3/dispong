@@ -28,7 +28,7 @@ async def on_ready():
 # Console clear (Linux: replace 'cls' with 'clear')
 
 def consoleclear():
-    os.system('cls')
+    pass
     
 # Duel command (v1.0)
 
@@ -312,136 +312,73 @@ async def ping(ctx):
         opponentid2 = sum(opponentid1)
         opponentid = int(opponentid2)
 
-        try:
-            if rpsbot == 6:
-                cur.execute(f"""UPDATE `{opponentid}` SET rps=1""")
-                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=2""")
-                conn.commit()
+        
+        if rpsbot == 6:
+            cur.execute(f"""UPDATE `{opponentid}` SET rps=1""")
+            cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=2""")
+            conn.commit()
 
-            else:
-                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=2""")
-                cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=1""")
-                conn.commit()
+        else:
+            cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=2""")
+            cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=1""")
+            conn.commit()
 
-            class rpsView(discord.ui.View):
-                @discord.ui.button(
-                    label="Rock",
-                    style=discord.ButtonStyle.primary,
-                    emoji="🪨"
-                )
+        class rpsView(discord.ui.View):
+            @discord.ui.button(
+                label="Rock",
+                style=discord.ButtonStyle.primary,
+                emoji="🪨"
+            )
 
-                async def rock_button_callback(self, button, interaction):
-                    conn = sq.connect('datas.db')
-                    cur = conn.cursor()
+            async def rock_button_callback(self, button, interaction):
+                conn = sq.connect('datas.db')
+                cur = conn.cursor()
 
-                    conn2 = sq.connect('stats.db')
-                    cur2 = conn2.cursor()
+                conn2 = sq.connect('stats.db')
+                cur2 = conn2.cursor()
 
-                    try:
-                        minigameid1 = cur.execute(f"""SELECT lastminigameid FROM `{interaction.user.id}`""").fetchone()
-                        minigameid2 = sum(minigameid1)
-                        minigameid = int(minigameid2)
+                try:
+                    minigameid1 = cur.execute(f"""SELECT lastminigameid FROM `{interaction.user.id}`""").fetchone()
+                    minigameid2 = sum(minigameid1)
+                    minigameid = int(minigameid2)
 
-                        if minigameid == self.message.id:
-                            rps1 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
-                            rps2 = sum(rps1)
-                            rps = int(rps2)
+                    if minigameid == self.message.id:
+                        rps1 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
+                        rps2 = sum(rps1)
+                        rps = int(rps2)
 
+                        if rpsbot == 6:
+                            opporps1 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
+                            opporps2 = sum(opporps1)
+                            opporps = int(opporps2)
+
+                        else:
+                            opporps1 = cur.execute(f"""SELECT rpsbot FROM `{ctx.user.id}`""").fetchone()
+                            opporps2 = sum(opporps1)
+                            opporps = int(opporps2)
+
+                        if interaction.user.id == ctx.user.id and rps == 2:
                             if rpsbot == 6:
-                                opporps1 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
-                                opporps2 = sum(opporps1)
-                                opporps = int(opporps2)
-
-                            else:
-                                opporps1 = cur.execute(f"""SELECT rpsbot FROM `{ctx.user.id}`""").fetchone()
-                                opporps2 = sum(opporps1)
-                                opporps = int(opporps2)
-
-                            if interaction.user.id == ctx.user.id and rps == 2:
-                                if rpsbot == 6:
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=3""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET rps=2""")
-                                    conn.commit()
-                                    await interaction.message.edit(f"Okay! Now it's <@{opponentid}>'s turn to choose! 👉")
-                                    await interaction.response.defer()
-                                else:
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=3""")
-
-                                    gennum = random.randint(1,3)
-
-                                    if gennum == 1:
-                                        self.disable_all_items()
-                                        await interaction.message.edit(f"Player: 🪨\nBot: 🪨\n\nDraw! Now it's bot's turn to ping a ball! 🤜🤛", view=self)
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                        await ctx.respond(":robot:: Pong! 🏓")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                        conn.commit()
-                                        conn.close()
-                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                        upd2 = sum(upd1)
-                                        upd = int(upd2)
-                                        upd += 1
-                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                        conn2.commit()
-                                        conn2.close()
-                                        await interaction.response.defer()
-
-                                    elif gennum == 2:
-                                        self.disable_all_items()
-                                        await interaction.message.edit(f"Player: 🪨\nBot: ✂️\n\nPlayer won! Bot missed the shot, so <@{ctx.user.id}> has won this match! **Game over!** 🏆", view=self)
-                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                        conn.commit()
-                                        conn.close()
-                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
-                                        upd2 = sum(upd1)
-                                        upd = int(upd2)
-                                        upd -= 1
-                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
-                                        conn2.commit()
-                                        conn2.close()
-                                        await interaction.response.defer()
-
-                                    else:
-                                        self.disable_all_items()
-                                        await interaction.message.edit(f"Player: 🪨\nBot: 📜\n\nBot won! Now it's bot's turn to ping a ball! 🏓", view=self)
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                        await ctx.respond(":robot:: Pong! 🏓")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                        conn.commit()
-                                        conn.close()
-                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                        upd2 = sum(upd1)
-                                        upd = int(upd2)
-                                        upd += 1
-                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                        conn2.commit()
-                                        conn2.close()
-                                        await interaction.response.defer()
-                                        
-
-                            elif interaction.user.id == opponentid and opporps == 2:
-                                cur.execute(f"""UPDATE `{opponentid}` SET rps=3""")
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=3""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET rps=2""")
                                 conn.commit()
-                                rps11 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
-                                rps12 = sum(rps11)
-                                rps1 = int(rps12)
+                                await interaction.message.edit(f"Okay! Now it's <@{opponentid}>'s turn to choose! 👉")
+                                await interaction.response.defer()
+                            else:
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=3""")
 
-                                rps21 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
-                                rps22 = sum(rps21)
-                                rps2 = int(rps22)
+                                gennum = random.randint(1,3)
 
-                                if rps2 == 3 and rps1 == 3:
+                                if gennum == 1:
                                     self.disable_all_items()
-                                    await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: 🪨\n\nDraw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛", view=self)
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                    await interaction.message.edit(f"Player: 🪨\nBot: 🪨\n\nDraw! Now it's bot's turn to ping a ball! 🤜🤛", view=self)
                                     cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                    await ctx.respond(":robot:: Pong! 🏓")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
                                     conn.commit()
+                                    conn.close()
                                     upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
                                     upd2 = sum(upd1)
                                     upd = int(upd2)
@@ -451,365 +388,350 @@ async def ping(ctx):
                                     conn2.close()
                                     await interaction.response.defer()
 
-                                elif rps2 == 3 and rps1 == 4:
+                                elif gennum == 2:
                                     self.disable_all_items()
-                                    await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: 🪨\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓", view=self)
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
-                                    conn.commit()
-                                    upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                    upd2 = sum(upd1)
-                                    upd = int(upd2)
-                                    upd += 1
-                                    cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                    conn2.commit()
-                                    conn2.close()
-                                    await interaction.response.defer()
-
-                                elif rps2 == 3 and rps1 == 5:
-                                    self.disable_all_items()
-                                    await interaction.message.edit(f"Player 1: 📜\nPlayer 2: 🪨\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆", view=self)
+                                    await interaction.message.edit(f"Player: 🪨\nBot: ✂️\n\nPlayer won! Bot missed the shot, so <@{ctx.user.id}> has won this match! **Game over!** 🏆", view=self)
                                     cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                    cur.execute(f"""DROP TABLE `{opponentid}`""")
                                     conn.commit()
-                                    upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                    conn.close()
+                                    upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
                                     upd2 = sum(upd1)
                                     upd = int(upd2)
                                     upd -= 1
-                                    cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                    cur2.execute(f"""UPDATE main SET botgames={upd}""")
                                     conn2.commit()
                                     conn2.close()
-                                    await interaction.response.defer()
-
-                                conn.close()
-
-                            else:
-                                await interaction.response.send_message("Sorry, but it's not your turn. <:crosspong:1134110291311992962>", ephemeral=True)
-                        else:
-                            await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                    except:
-                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-
-                @discord.ui.button(
-                    label="Scissors",
-                    style=discord.ButtonStyle.primary,
-                    emoji="✂️"
-                )
-
-                async def scissors_button_callback(self, button, interaction):
-                    conn = sq.connect('datas.db')
-                    cur = conn.cursor()
-
-                    conn2 = sq.connect('stats.db')
-                    cur2 = conn2.cursor()
-
-                    try:
-                        minigameid1 = cur.execute(f"""SELECT lastminigameid FROM `{interaction.user.id}`""").fetchone()
-                        minigameid2 = sum(minigameid1)
-                        minigameid = int(minigameid2)
-
-                        if minigameid == self.message.id:
-                            rps1 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
-                            rps2 = sum(rps1)
-                            rps = int(rps2)
-
-                            if rpsbot == 6:
-                                opporps1 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
-                                opporps2 = sum(opporps1)
-                                opporps = int(opporps2)
-
-                            else:
-                                opporps1 = cur.execute(f"""SELECT rpsbot FROM `{ctx.user.id}`""").fetchone()
-                                opporps2 = sum(opporps1)
-                                opporps = int(opporps2)
-
-                            if interaction.user.id == ctx.user.id and rps == 2:
-                                if rpsbot == 6:
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=4""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET rps=2""")
-                                    conn.commit()
-                                    await interaction.message.edit(f"Okay! Now it's <@{opponentid}>'s turn to choose! 👉")
                                     await interaction.response.defer()
 
                                 else:
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=4""")
+                                    self.disable_all_items()
+                                    await interaction.message.edit(f"Player: 🪨\nBot: 📜\n\nBot won! Now it's bot's turn to ping a ball! 🏓", view=self)
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                    await ctx.respond(":robot:: Pong! 🏓")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                    conn.commit()
+                                    conn.close()
+                                    upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                    upd2 = sum(upd1)
+                                    upd = int(upd2)
+                                    upd += 1
+                                    cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                    conn2.commit()
+                                    conn2.close()
+                                    await interaction.response.defer()
+                                    
 
-                                    gennum = random.randint(1,3)
+                        elif interaction.user.id == opponentid and opporps == 2:
+                            cur.execute(f"""UPDATE `{opponentid}` SET rps=3""")
+                            conn.commit()
+                            rps11 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
+                            rps12 = sum(rps11)
+                            rps1 = int(rps12)
 
-                                    if gennum == 1:
-                                        self.disable_all_items()
-                                        await interaction.message.edit(f"Player: ✂️\nBot: 🪨\n\nBot won! Now it's bot's turn to ping a ball! 🏓", view=self)
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                        await ctx.respond(":robot:: Pong! 🏓")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                        conn.commit()
-                                        conn.close()
-                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                        upd2 = sum(upd1)
-                                        upd = int(upd2)
-                                        upd += 1
-                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                        conn2.commit()
-                                        conn2.close()
-                                        await interaction.response.defer()
+                            rps21 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
+                            rps22 = sum(rps21)
+                            rps2 = int(rps22)
 
-                                    elif gennum == 2:
-                                        self.disable_all_items()
-                                        await interaction.message.edit(f"Player: ✂️\nBot: ✂️\n\nDraw! Now it's bot's turn to ping a ball! 🤜🤛", view=self)
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                        await ctx.respond(":robot:: Pong! 🏓")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                        conn.commit()
-                                        conn.close()
-                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                        upd2 = sum(upd1)
-                                        upd = int(upd2)
-                                        upd += 1
-                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                        conn2.commit()
-                                        conn2.close()
-                                        await interaction.response.defer()
-
-                                    else:
-                                        self.disable_all_items()
-                                        await interaction.message.edit(f"Player: ✂️\nBot: 📜\n\nPlayer won! Bot missed the shot, so <@{ctx.user.id}> has won this match! **Game over!** 🏆", view=self)
-                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                        conn.commit()
-                                        conn.close()
-                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
-                                        upd2 = sum(upd1)
-                                        upd = int(upd2)
-                                        upd -= 1
-                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
-                                        conn2.commit()
-                                        conn2.close()
-                                        await interaction.response.defer()
-
-                            elif interaction.user.id == opponentid and opporps == 2:
-                                cur.execute(f"""UPDATE `{opponentid}` SET rps=4""")
+                            if rps2 == 3 and rps1 == 3:
+                                self.disable_all_items()
+                                await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: 🪨\n\nDraw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛", view=self)
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
                                 conn.commit()
+                                upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd += 1
+                                cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
 
-                                rps11 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
-                                rps12 = sum(rps11)
-                                rps1 = int(rps12)
+                            elif rps2 == 3 and rps1 == 4:
+                                self.disable_all_items()
+                                await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: 🪨\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓", view=self)
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
+                                conn.commit()
+                                upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd += 1
+                                cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
 
-                                rps21 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
-                                rps22 = sum(rps21)
-                                rps2 = int(rps22)
+                            elif rps2 == 3 and rps1 == 5:
+                                self.disable_all_items()
+                                await interaction.message.edit(f"Player 1: 📜\nPlayer 2: 🪨\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆", view=self)
+                                cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                conn.commit()
+                                upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd -= 1
+                                cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
 
-                                if rps2 == 4 and rps1 == 4:
-                                    self.disable_all_items()
-                                    await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: ✂️\n\nDraw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛", view=self)
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
-                                    conn.commit()
-                                    upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                    upd2 = sum(upd1)
-                                    upd = int(upd2)
-                                    upd += 1
-                                    cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                    conn2.commit()
-                                    conn2.close()
-                                    await interaction.response.defer()
+                            conn.close()
 
-                                elif rps2 == 4 and rps1 == 3:
-                                    self.disable_all_items()
-                                    await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: ✂️\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆", view=self)
-                                    cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                    cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                    conn.commit()
-                                    upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
-                                    upd2 = sum(upd1)
-                                    upd = int(upd2)
-                                    upd -= 1
-                                    cur2.execute(f"""UPDATE main SET currentgames={upd}""")
-                                    conn2.commit()
-                                    conn2.close()
-                                    await interaction.response.defer()
-
-                                elif rps2 == 4 and rps1 == 5:
-                                    self.disable_all_items()
-                                    await interaction.message.edit(f"Player 1: 📜\nPlayer 2: ✂️\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓", view=self)
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
-                                    conn.commit()
-                                    upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                    upd2 = sum(upd1)
-                                    upd = int(upd2)
-                                    upd += 1
-                                    cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                    conn2.commit()
-                                    conn2.close()
-                                    await interaction.response.defer()
-
-                                conn.close()
-                                
-                            else:
-                                await interaction.response.send_message("Sorry, but it's not your turn. <:crosspong:1134110291311992962>", ephemeral=True)
                         else:
-                            await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                    except:
+                            await interaction.response.send_message("Sorry, but it's not your turn. <:crosspong:1134110291311992962>", ephemeral=True)
+                    else:
                         await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                except:
+                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
 
-                @discord.ui.button(
-                    label="Paper",
-                    style=discord.ButtonStyle.primary,
-                    emoji="📜"
-                )
+            @discord.ui.button(
+                label="Scissors",
+                style=discord.ButtonStyle.primary,
+                emoji="✂️"
+            )
 
-                async def paper_button_callback(self, button, interaction):
-                    conn = sq.connect('datas.db')
-                    cur = conn.cursor()
+            async def scissors_button_callback(self, button, interaction):
+                conn = sq.connect('datas.db')
+                cur = conn.cursor()
 
-                    conn2 = sq.connect('stats.db')
-                    cur2 = conn2.cursor()
+                conn2 = sq.connect('stats.db')
+                cur2 = conn2.cursor()
 
-                    try:
-                        minigameid1 = cur.execute(f"""SELECT lastminigameid FROM `{interaction.user.id}`""").fetchone()
-                        minigameid2 = sum(minigameid1)
-                        minigameid = int(minigameid2)
+                try:
+                    minigameid1 = cur.execute(f"""SELECT lastminigameid FROM `{interaction.user.id}`""").fetchone()
+                    minigameid2 = sum(minigameid1)
+                    minigameid = int(minigameid2)
 
-                        if minigameid == self.message.id:
-                            rps1 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
-                            rps2 = sum(rps1)
-                            rps = int(rps2)
+                    if minigameid == self.message.id:
+                        rps1 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
+                        rps2 = sum(rps1)
+                        rps = int(rps2)
 
+                        if rpsbot == 6:
+                            opporps1 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
+                            opporps2 = sum(opporps1)
+                            opporps = int(opporps2)
+
+                        else:
+                            opporps1 = cur.execute(f"""SELECT rpsbot FROM `{ctx.user.id}`""").fetchone()
+                            opporps2 = sum(opporps1)
+                            opporps = int(opporps2)
+
+                        if interaction.user.id == ctx.user.id and rps == 2:
                             if rpsbot == 6:
-                                opporps1 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
-                                opporps2 = sum(opporps1)
-                                opporps = int(opporps2)
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=4""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET rps=2""")
+                                conn.commit()
+                                await interaction.message.edit(f"Okay! Now it's <@{opponentid}>'s turn to choose! 👉")
+                                await interaction.response.defer()
 
                             else:
-                                opporps1 = cur.execute(f"""SELECT rpsbot FROM `{ctx.user.id}`""").fetchone()
-                                opporps2 = sum(opporps1)
-                                opporps = int(opporps2)
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=4""")
 
-                            if interaction.user.id == ctx.user.id and rps == 2:
-                                if rpsbot == 6:
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=5""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET rps=2""")
+                                gennum = random.randint(1,3)
+
+                                if gennum == 1:
+                                    self.disable_all_items()
+                                    await interaction.message.edit(f"Player: ✂️\nBot: 🪨\n\nBot won! Now it's bot's turn to ping a ball! 🏓", view=self)
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                    await ctx.respond(":robot:: Pong! 🏓")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
                                     conn.commit()
-                                    await interaction.message.edit(f"Okay! Now it's <@{opponentid}>'s turn to choose! 👉")
+                                    conn.close()
+                                    upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                    upd2 = sum(upd1)
+                                    upd = int(upd2)
+                                    upd += 1
+                                    cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                    conn2.commit()
+                                    conn2.close()
+                                    await interaction.response.defer()
+
+                                elif gennum == 2:
+                                    self.disable_all_items()
+                                    await interaction.message.edit(f"Player: ✂️\nBot: ✂️\n\nDraw! Now it's bot's turn to ping a ball! 🤜🤛", view=self)
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                    await ctx.respond(":robot:: Pong! 🏓")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                    conn.commit()
+                                    conn.close()
+                                    upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                    upd2 = sum(upd1)
+                                    upd = int(upd2)
+                                    upd += 1
+                                    cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                    conn2.commit()
+                                    conn2.close()
                                     await interaction.response.defer()
 
                                 else:
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=5""")
-
-                                    gennum = random.randint(1,3)
-
-                                    if gennum == 1:
-                                        self.disable_all_items()
-                                        await interaction.message.edit(f"Player: 📜\nBot: 🪨\n\nPlayer won! Bot missed the shot, so <@{ctx.user.id}> has won this match! **Game over!** 🏆", view=self)
-                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                        conn.commit()
-                                        conn.close()
-                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
-                                        upd2 = sum(upd1)
-                                        upd = int(upd2)
-                                        upd -= 1
-                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
-                                        conn2.commit()
-                                        conn2.close()
-                                        await interaction.response.defer()
-
-                                    elif gennum == 2:
-                                        self.disable_all_items()
-                                        await interaction.message.edit(f"Player: 📜\nBot: ✂️\n\nBot won! Now it's bot's turn to ping a ball! 🏓", view=self)
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                        await ctx.respond(":robot:: Pong! 🏓")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                        conn.commit()
-                                        conn.close()
-                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                        upd2 = sum(upd1)
-                                        upd = int(upd2)
-                                        upd += 1
-                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                        conn2.commit()
-                                        conn2.close()
-                                        await interaction.response.defer()
-
-                                    else:
-                                        self.disable_all_items()
-                                        await interaction.message.edit(f"Player: 📜\nBot: 📜\n\nDraw! Now it's bot's turn to ping a ball! 🤜🤛", view=self)
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                        await ctx.respond(":robot:: Pong! 🏓")
-                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                        upd2 = sum(upd1)
-                                        upd = int(upd2)
-                                        upd += 1
-                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                        conn2.commit()
-                                        conn.commit()
-                                        conn.close()
-                                        await interaction.response.defer()
-
-                            elif interaction.user.id == opponentid and opporps == 2:
-                                cur.execute(f"""UPDATE `{opponentid}` SET rps=5""")
-                                conn.commit()
-
-                                rps11 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
-                                rps12 = sum(rps11)
-                                rps1 = int(rps12)
-
-                                rps21 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
-                                rps22 = sum(rps21)
-                                rps2 = int(rps22)
-                                
-                                if rps2 == 5 and rps1 == 5:
                                     self.disable_all_items()
-                                    await interaction.message.edit(f"Player 1: 📜\nPlayer 2: 📜\n\nDraw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛", view=self)
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
+                                    await interaction.message.edit(f"Player: ✂️\nBot: 📜\n\nPlayer won! Bot missed the shot, so <@{ctx.user.id}> has won this match! **Game over!** 🏆", view=self)
+                                    cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
                                     conn.commit()
-                                    upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                    upd2 = sum(upd1)
-                                    upd = int(upd2)
-                                    upd += 1
-                                    cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                    conn2.commit()
-                                    conn2.close()
-                                    await interaction.response.defer()
-
-                                elif rps2 == 5 and rps1 == 4:
-                                    self.disable_all_items()
-                                    await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: 📜\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆", view=self)
-                                    upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                    conn.close()
+                                    upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
                                     upd2 = sum(upd1)
                                     upd = int(upd2)
                                     upd -= 1
-                                    cur2.execute(f"""UPDATE main SET currentgames={upd}""")
-                                    cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                    cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                    conn.commit()
+                                    cur2.execute(f"""UPDATE main SET botgames={upd}""")
                                     conn2.commit()
                                     conn2.close()
                                     await interaction.response.defer()
 
-                                elif rps2 == 5 and rps1 == 3:
+                        elif interaction.user.id == opponentid and opporps == 2:
+                            cur.execute(f"""UPDATE `{opponentid}` SET rps=4""")
+                            conn.commit()
+
+                            rps11 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
+                            rps12 = sum(rps11)
+                            rps1 = int(rps12)
+
+                            rps21 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
+                            rps22 = sum(rps21)
+                            rps2 = int(rps22)
+
+                            if rps2 == 4 and rps1 == 4:
+                                self.disable_all_items()
+                                await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: ✂️\n\nDraw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛", view=self)
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
+                                conn.commit()
+                                upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd += 1
+                                cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
+
+                            elif rps2 == 4 and rps1 == 3:
+                                self.disable_all_items()
+                                await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: ✂️\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆", view=self)
+                                cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                conn.commit()
+                                upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd -= 1
+                                cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
+
+                            elif rps2 == 4 and rps1 == 5:
+                                self.disable_all_items()
+                                await interaction.message.edit(f"Player 1: 📜\nPlayer 2: ✂️\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓", view=self)
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
+                                conn.commit()
+                                upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd += 1
+                                cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
+
+                            conn.close()
+                            
+                        else:
+                            await interaction.response.send_message("Sorry, but it's not your turn. <:crosspong:1134110291311992962>", ephemeral=True)
+                    else:
+                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                except:
+                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+
+            @discord.ui.button(
+                label="Paper",
+                style=discord.ButtonStyle.primary,
+                emoji="📜"
+            )
+
+            async def paper_button_callback(self, button, interaction):
+                conn = sq.connect('datas.db')
+                cur = conn.cursor()
+
+                conn2 = sq.connect('stats.db')
+                cur2 = conn2.cursor()
+
+                try:
+                    minigameid1 = cur.execute(f"""SELECT lastminigameid FROM `{interaction.user.id}`""").fetchone()
+                    minigameid2 = sum(minigameid1)
+                    minigameid = int(minigameid2)
+
+                    if minigameid == self.message.id:
+                        rps1 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
+                        rps2 = sum(rps1)
+                        rps = int(rps2)
+
+                        if rpsbot == 6:
+                            opporps1 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
+                            opporps2 = sum(opporps1)
+                            opporps = int(opporps2)
+
+                        else:
+                            opporps1 = cur.execute(f"""SELECT rpsbot FROM `{ctx.user.id}`""").fetchone()
+                            opporps2 = sum(opporps1)
+                            opporps = int(opporps2)
+
+                        if interaction.user.id == ctx.user.id and rps == 2:
+                            if rpsbot == 6:
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=5""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET rps=2""")
+                                conn.commit()
+                                await interaction.message.edit(f"Okay! Now it's <@{opponentid}>'s turn to choose! 👉")
+                                await interaction.response.defer()
+
+                            else:
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=5""")
+
+                                gennum = random.randint(1,3)
+
+                                if gennum == 1:
                                     self.disable_all_items()
-                                    await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: 📜\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓", view=self)
-                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                    await interaction.message.edit(f"Player: 📜\nBot: 🪨\n\nPlayer won! Bot missed the shot, so <@{ctx.user.id}> has won this match! **Game over!** 🏆", view=self)
+                                    cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                    conn.commit()
+                                    conn.close()
+                                    upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                    upd2 = sum(upd1)
+                                    upd = int(upd2)
+                                    upd -= 1
+                                    cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                    conn2.commit()
+                                    conn2.close()
+                                    await interaction.response.defer()
+
+                                elif gennum == 2:
+                                    self.disable_all_items()
+                                    await interaction.message.edit(f"Player: 📜\nBot: ✂️\n\nBot won! Now it's bot's turn to ping a ball! 🏓", view=self)
                                     cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
-                                    cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                    await ctx.respond(":robot:: Pong! 🏓")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                    conn.commit()
+                                    conn.close()
                                     upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
                                     upd2 = sum(upd1)
                                     upd = int(upd2)
@@ -817,20 +739,95 @@ async def ping(ctx):
                                     cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
                                     conn2.commit()
                                     conn2.close()
-                                    conn.commit()
                                     await interaction.response.defer()
 
-                                conn.close()
-                                
-                            else:
-                                await interaction.response.send_message("Sorry, but it's not your turn. <:crosspong:1134110291311992962>", ephemeral=True)
+                                else:
+                                    self.disable_all_items()
+                                    await interaction.message.edit(f"Player: 📜\nBot: 📜\n\nDraw! Now it's bot's turn to ping a ball! 🤜🤛", view=self)
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET rpsbot=0""")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                    await ctx.respond(":robot:: Pong! 🏓")
+                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                    upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                    upd2 = sum(upd1)
+                                    upd = int(upd2)
+                                    upd += 1
+                                    cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                    conn2.commit()
+                                    conn.commit()
+                                    conn.close()
+                                    await interaction.response.defer()
+
+                        elif interaction.user.id == opponentid and opporps == 2:
+                            cur.execute(f"""UPDATE `{opponentid}` SET rps=5""")
+                            conn.commit()
+
+                            rps11 = cur.execute(f"""SELECT rps FROM `{ctx.user.id}`""").fetchone()
+                            rps12 = sum(rps11)
+                            rps1 = int(rps12)
+
+                            rps21 = cur.execute(f"""SELECT rps FROM `{opponentid}`""").fetchone()
+                            rps22 = sum(rps21)
+                            rps2 = int(rps22)
+                            
+                            if rps2 == 5 and rps1 == 5:
+                                self.disable_all_items()
+                                await interaction.message.edit(f"Player 1: 📜\nPlayer 2: 📜\n\nDraw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛", view=self)
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
+                                conn.commit()
+                                upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd += 1
+                                cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
+
+                            elif rps2 == 5 and rps1 == 4:
+                                self.disable_all_items()
+                                await interaction.message.edit(f"Player 1: ✂️\nPlayer 2: 📜\n\nPlayer 1 won! <@{opponentid}> missed the shot, so <@{ctx.user.id}> won this match! **Game over!** 🏆", view=self)
+                                upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd -= 1
+                                cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                conn.commit()
+                                conn2.commit()
+                                conn2.close()
+                                await interaction.response.defer()
+
+                            elif rps2 == 5 and rps1 == 3:
+                                self.disable_all_items()
+                                await interaction.message.edit(f"Player 1: 🪨\nPlayer 2: 📜\n\nPlayer 2 won! Now it's <@{opponentid}>'s turn to ping a ball! 🏓", view=self)
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                cur.execute(f"""UPDATE `{ctx.user.id}` SET rps=0""")
+                                cur.execute(f"""UPDATE `{opponentid}` SET rps=0""")
+                                upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                upd2 = sum(upd1)
+                                upd = int(upd2)
+                                upd += 1
+                                cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                conn2.commit()
+                                conn2.close()
+                                conn.commit()
+                                await interaction.response.defer()
+
+                            conn.close()
+                            
                         else:
-                            await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                    except:
+                            await interaction.response.send_message("Sorry, but it's not your turn. <:crosspong:1134110291311992962>", ephemeral=True)
+                    else:
                         await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-        except:
-            # I'll use this to print errors.
-            pass
+                except:
+                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
 
         inter = await ctx.respond(f"__**RPS TIME!**__ 🪨📜✂️\n\nIf <@{ctx.user.id}> wins, the minigame ends and this user wins this match. Other situations ends with <@{opponentid}>'s turn.\n\n<@{ctx.user.id}>, choose *Rock*, *Scissors* or *Paper*! <:circlepong:1134110288438894654>", view=rpsView())
         originalmsg = await inter.original_response()
@@ -865,502 +862,1334 @@ async def ping(ctx):
         opponentid2 = sum(opponentid1)
         opponentid = int(opponentid2)
 
-        try:
-            if tttbot == 3:
-                cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                conn.commit()
+        
+        if tttbot == 3:
+            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+            conn.commit()
 
-            else:
-                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                conn.commit()
+        else:
+            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+            conn.commit()
+        
+        options = [
+            discord.SelectOption(label="1"),
+            discord.SelectOption(label="2"),
+            discord.SelectOption(label="3"),
+            discord.SelectOption(label="4"),
+            discord.SelectOption(label="5"),
+            discord.SelectOption(label="6"),
+            discord.SelectOption(label="7"),
+            discord.SelectOption(label="8"),
+            discord.SelectOption(label="9")
+        ]
+
+        one1="<:one1:1164986232841982003>"
+        two2="<:two2:1164986146539970632>"
+        three3="<:three3:1164986176487305356>"
+        four4="<:four4:1164986285715365909>"
+        five5="<:five5:1164986312667967608>"
+        six6="<:six6:1164986175312896081>"
+        seven7="<:seven7:1164986188873072660>"
+        eight8="<:eight8:1164986320922361856>"
+        nine9="<:nine9:1164986246884499569>"
+
+        class menuView(discord.ui.View):
+            @discord.ui.select(
+                    placeholder="Choose a position to place your symbol...",
+                    options=options
+            )
             
-            options = [
-                discord.SelectOption(label="1"),
-                discord.SelectOption(label="2"),
-                discord.SelectOption(label="3"),
-                discord.SelectOption(label="4"),
-                discord.SelectOption(label="5"),
-                discord.SelectOption(label="6"),
-                discord.SelectOption(label="7"),
-                discord.SelectOption(label="8"),
-                discord.SelectOption(label="9")
-            ]
+            async def select_callback(self, select, interaction):
+                # 1 - Nothing
+                # 2 - X
+                # 3 - O
 
-            one1="<:one1:1164986232841982003>"
-            two2="<:two2:1164986146539970632>"
-            three3="<:three3:1164986176487305356>"
-            four4="<:four4:1164986285715365909>"
-            five5="<:five5:1164986312667967608>"
-            six6="<:six6:1164986175312896081>"
-            seven7="<:seven7:1164986188873072660>"
-            eight8="<:eight8:1164986320922361856>"
-            nine9="<:nine9:1164986246884499569>"
+                conn = sq.connect('datas.db')
+                cur = conn.cursor()
 
-            class menuView(discord.ui.View):
-                @discord.ui.select(
-                        placeholder="Choose a position to place your symbol...",
-                        options=options
-                )
-                
-                async def select_callback(self, select, interaction):
-                    # 1 - Nothing
-                    # 2 - X
-                    # 3 - O
+                try:
+                    turn1 = cur.execute(f"""SELECT tttturn FROM `{interaction.user.id}`""").fetchone()
+                    turn2 = sum(turn1)
+                    interactiontttturn = int(turn2)
 
-                    conn = sq.connect('datas.db')
-                    cur = conn.cursor()
+                    tttbot1 = cur.execute(f"""SELECT tttbot FROM `{ctx.user.id}`""").fetchone()
+                    tttbot2 = sum(tttbot1)
+                    tttbot = int(tttbot2)
 
-                    conn2 = sq.connect('stats.db')
-                    cur2 = conn.cursor()
+                    opponentid1 = cur.execute(f"""SELECT opponentid FROM `{ctx.user.id}`""").fetchone()
+                    opponentid2 = sum(opponentid1)
+                    opponentid = int(opponentid2)
 
-                    try:
-                        turn1 = cur.execute(f"""SELECT tttturn FROM `{interaction.user.id}`""").fetchone()
-                        turn2 = sum(turn1)
-                        interactiontttturn = int(turn2)
+                    minigameid1 = cur.execute(f"""SELECT lastminigameid FROM `{interaction.user.id}`""").fetchone()
+                    minigameid2 = sum(minigameid1)
+                    minigameid = int(minigameid2)
 
-                        tttbot1 = cur.execute(f"""SELECT tttbot FROM `{ctx.user.id}`""").fetchone()
-                        tttbot2 = sum(tttbot1)
-                        tttbot = int(tttbot2)
+                    if interactiontttturn == 2:
+                        if interaction.user.id == ctx.user.id or interaction.user.id == opponentid:
+                            if minigameid == self.message.id:
+                                needdefer = True
+                                anywin = True
+                                if select.values[0] == "1":
+                                        tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
+                                        tttgame = int(''.join(map(str, tttgame1)))
+                                        tttgame = [int(x) for x in str(tttgame)]
 
-                        opponentid1 = cur.execute(f"""SELECT opponentid FROM `{ctx.user.id}`""").fetchone()
-                        opponentid2 = sum(opponentid1)
-                        opponentid = int(opponentid2)
+                                        if tttgame[0] == 1:
+                                            if tttbot == 3:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[0] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
+                                                    conn.commit()
 
-                        minigameid1 = cur.execute(f"""SELECT lastminigameid FROM `{interaction.user.id}`""").fetchone()
-                        minigameid2 = sum(minigameid1)
-                        minigameid = int(minigameid2)
-
-                        if interactiontttturn == 2:
-                            if interaction.user.id == ctx.user.id or interaction.user.id == opponentid:
-                                if minigameid == self.message.id:
-                                    needdefer = True
-                                    anywin = True
-                                    if select.values[0] == "1":
-                                            tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
-                                            tttgame = int(''.join(map(str, tttgame1)))
-                                            tttgame = [int(x) for x in str(tttgame)]
-
-                                            if tttgame[0] == 1:
-                                                if tttbot == 3:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[0] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
-                                                        conn.commit()
-
-                                                    elif interaction.user.id == opponentid:
-                                                        tttgame[0] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                                                        conn.commit()
-
-                                                else:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[0] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
-                                                        conn.commit()
-
-                                                    else:
-                                                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                        needdefer = False
+                                                elif interaction.user.id == opponentid:
+                                                    tttgame[0] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+                                                    conn.commit()
 
                                             else:
-                                                await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                needdefer = False
-
-                                    if select.values[0] == "2":
-                                            tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
-                                            tttgame = int(''.join(map(str, tttgame1)))
-                                            tttgame = [int(x) for x in str(tttgame)]
-
-                                            if tttgame[1] == 1:
-                                                if tttbot == 3:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[1] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
-                                                        conn.commit()
-
-                                                    elif interaction.user.id == opponentid:
-                                                        tttgame[1] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                                                        conn.commit()
-                                                else:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[1] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
-                                                        conn.commit()
-
-                                                    else:
-                                                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                        needdefer = False
-
-                                            else:
-                                                await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                needdefer = False
-
-                                    if select.values[0] == "3":
-                                            tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
-                                            tttgame = int(''.join(map(str, tttgame1)))
-                                            tttgame = [int(x) for x in str(tttgame)]
-
-                                            if tttgame[2] == 1:
-                                                if tttbot == 3:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[2] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
-                                                        conn.commit()
-
-                                                    elif interaction.user.id == opponentid:
-                                                        tttgame[2] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                                                        conn.commit()
-                                                else:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[2] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
-                                                        conn.commit()
-
-                                                    else:
-                                                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                        needdefer = False
-
-                                            else:
-                                                await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                needdefer = False
-                                                
-                                    if select.values[0] == "4":
-                                            tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
-                                            tttgame = int(''.join(map(str, tttgame1)))
-                                            tttgame = [int(x) for x in str(tttgame)]
-
-                                            if tttgame[3] == 1:
-                                                if tttbot == 3:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[3] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
-                                                        conn.commit()
-
-                                                    elif interaction.user.id == opponentid:
-                                                        tttgame[3] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                                                        conn.commit()
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[0] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
+                                                    conn.commit()
 
                                                 else:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[3] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
-                                                        conn.commit()
+                                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                                                    needdefer = False
+                                                    anywin = False
+                                                    conn.close()
 
-                                                    else:
-                                                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                        needdefer = False
+                                        else:
+                                            await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
+                                            needdefer = False
+                                            anywin = False
+                                            conn.close()
 
+                                if select.values[0] == "2":
+                                        tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
+                                        tttgame = int(''.join(map(str, tttgame1)))
+                                        tttgame = [int(x) for x in str(tttgame)]
+
+                                        if tttgame[1] == 1:
+                                            if tttbot == 3:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[1] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
+                                                    conn.commit()
+
+                                                elif interaction.user.id == opponentid:
+                                                    tttgame[1] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+                                                    conn.commit()
                                             else:
-                                                await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                needdefer = False
-                                                
-                                    if select.values[0] == "5":
-                                            tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
-                                            tttgame = int(''.join(map(str, tttgame1)))
-                                            tttgame = [int(x) for x in str(tttgame)]
-
-                                            if tttgame[4] == 1:
-                                                if tttbot == 3:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[4] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
-                                                        conn.commit()
-
-                                                    elif interaction.user.id == opponentid:
-                                                        tttgame[4] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                                                        conn.commit()
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[1] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
+                                                    conn.commit()
 
                                                 else:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[4] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
-                                                        conn.commit()
+                                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                                                    needdefer = False
+                                                    anywin = False
+                                                    conn.close()
 
-                                                    else:
-                                                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                        needdefer = False
+                                        else:
+                                            await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
+                                            needdefer = False
+                                            anywin = False
+                                            conn.close()
 
+                                if select.values[0] == "3":
+                                        tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
+                                        tttgame = int(''.join(map(str, tttgame1)))
+                                        tttgame = [int(x) for x in str(tttgame)]
+
+                                        if tttgame[2] == 1:
+                                            if tttbot == 3:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[2] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
+                                                    conn.commit()
+
+                                                elif interaction.user.id == opponentid:
+                                                    tttgame[2] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+                                                    conn.commit()
                                             else:
-                                                await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                needdefer = False
-
-                                    if select.values[0] == "6":
-                                            tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
-                                            tttgame = int(''.join(map(str, tttgame1)))
-                                            tttgame = [int(x) for x in str(tttgame)]
-
-                                            if tttgame[5] == 1:
-                                                if tttbot == 3:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[5] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
-                                                        conn.commit()
-
-                                                    elif interaction.user.id == opponentid:
-                                                        tttgame[5] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                                                        conn.commit()
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[2] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
+                                                    conn.commit()
 
                                                 else:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[5] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
-                                                        conn.commit()
+                                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                                                    needdefer = False
+                                                    anywin = False
+                                                    conn.close()
 
-                                                    else:
-                                                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                        needdefer = False
+                                        else:
+                                            await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
+                                            needdefer = False
+                                            anywin = False
+                                            conn.close()
+                                            
+                                if select.values[0] == "4":
+                                        tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
+                                        tttgame = int(''.join(map(str, tttgame1)))
+                                        tttgame = [int(x) for x in str(tttgame)]
+
+                                        if tttgame[3] == 1:
+                                            if tttbot == 3:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[3] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
+                                                    conn.commit()
+
+                                                elif interaction.user.id == opponentid:
+                                                    tttgame[3] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+                                                    conn.commit()
 
                                             else:
-                                                await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                needdefer = False
-
-                                    if select.values[0] == "7":
-                                            tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
-                                            tttgame = int(''.join(map(str, tttgame1)))
-                                            tttgame = [int(x) for x in str(tttgame)]
-
-                                            if tttgame[6] == 1:
-                                                if tttbot == 3:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[6] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
-                                                        conn.commit()
-
-                                                    elif interaction.user.id == opponentid:
-                                                        tttgame[6] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                                                        conn.commit()
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[3] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
+                                                    conn.commit()
 
                                                 else:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[6] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
-                                                        conn.commit()
+                                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                                                    needdefer = False
+                                                    anywin = False
+                                                    conn.close()
 
-                                                    else:
-                                                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                        needdefer = False
+                                        else:
+                                            await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
+                                            needdefer = False
+                                            anywin = False
+                                            conn.close()
+                                            
+                                if select.values[0] == "5":
+                                        tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
+                                        tttgame = int(''.join(map(str, tttgame1)))
+                                        tttgame = [int(x) for x in str(tttgame)]
+
+                                        if tttgame[4] == 1:
+                                            if tttbot == 3:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[4] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
+                                                    conn.commit()
+
+                                                elif interaction.user.id == opponentid:
+                                                    tttgame[4] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+                                                    conn.commit()
 
                                             else:
-                                                await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                needdefer = False
-
-                                    if select.values[0] == "8":
-                                            tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
-                                            tttgame = int(''.join(map(str, tttgame1)))
-                                            tttgame = [int(x) for x in str(tttgame)]
-
-                                            if tttgame[7] == 1:
-                                                if tttbot == 3:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[7] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
-                                                        conn.commit()
-
-                                                    elif interaction.user.id == opponentid:
-                                                        tttgame[7] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                                                        conn.commit()
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[4] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
+                                                    conn.commit()
 
                                                 else:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[7] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
-                                                        conn.commit()
+                                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                                                    needdefer = False
+                                                    anywin = False
+                                                    conn.close()
 
-                                                    else:
-                                                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                        needdefer = False
+                                        else:
+                                            await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
+                                            needdefer = False
+                                            anywin = False
+                                            conn.close()
+
+                                if select.values[0] == "6":
+                                        tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
+                                        tttgame = int(''.join(map(str, tttgame1)))
+                                        tttgame = [int(x) for x in str(tttgame)]
+
+                                        if tttgame[5] == 1:
+                                            if tttbot == 3:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[5] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
+                                                    conn.commit()
+
+                                                elif interaction.user.id == opponentid:
+                                                    tttgame[5] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+                                                    conn.commit()
 
                                             else:
-                                                await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                needdefer = False
-
-                                    if select.values[0] == "9":
-                                            tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
-                                            tttgame = int(''.join(map(str, tttgame1)))
-                                            tttgame = [int(x) for x in str(tttgame)]
-
-                                            if tttgame[8] == 1:
-                                                if tttbot == 3:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[8] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
-                                                        conn.commit()
-
-                                                    elif interaction.user.id == opponentid:
-                                                        tttgame[8] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
-                                                        conn.commit()
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[5] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
+                                                    conn.commit()
 
                                                 else:
-                                                    if interaction.user.id == ctx.user.id:
-                                                        tttgame[8] = 2
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
-                                                        conn.commit()
+                                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                                                    needdefer = False
+                                                    anywin = False
+                                                    conn.close()
 
-                                                    else:
-                                                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                        needdefer = False
+                                        else:
+                                            await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
+                                            needdefer = False
+                                            anywin = False
+                                            conn.close()
+
+                                if select.values[0] == "7":
+                                        tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
+                                        tttgame = int(''.join(map(str, tttgame1)))
+                                        tttgame = [int(x) for x in str(tttgame)]
+
+                                        if tttgame[6] == 1:
+                                            if tttbot == 3:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[6] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
+                                                    conn.commit()
+
+                                                elif interaction.user.id == opponentid:
+                                                    tttgame[6] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+                                                    conn.commit()
 
                                             else:
-                                                await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
-                                                needdefer = False
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[6] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
+                                                    conn.commit()
 
-                                    # "<:one1:1164986232841982003>"
-                                    # "<:two2:1164986146539970632>"
-                                    # "<:three3:1164986176487305356>"
-                                    # "<:four4:1164986285715365909>"
-                                    # "<:five5:1164986312667967608>"
-                                    # "<:six6:1164986175312896081>"
-                                    # "<:seven7:1164986188873072660>"
-                                    # "<:eight8:1164986320922361856>"
-                                    # "<:nine9:1164986246884499569>"
-                                    # "<:bluex:1164986327167672361>"
-                                    # "<:redo:1164986221118902362>"
-                                    #
-                                    # CTX.USER.ID = X
-                                    # OPPONENTID = O
-                                    #
-                                    # 2 - X
-                                    # 3 - 0
+                                                else:
+                                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                                                    needdefer = False
+                                                    anywin = False
+                                                    conn.close()
 
-                                    # 0 1 2
-                                    # 3 4 5
-                                    # 6 7 8
+                                        else:
+                                            await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
+                                            needdefer = False
+                                            anywin = False
+                                            conn.close()
+
+                                if select.values[0] == "8":
+                                        tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
+                                        tttgame = int(''.join(map(str, tttgame1)))
+                                        tttgame = [int(x) for x in str(tttgame)]
+
+                                        if tttgame[7] == 1:
+                                            if tttbot == 3:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[7] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
+                                                    conn.commit()
+
+                                                elif interaction.user.id == opponentid:
+                                                    tttgame[7] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+                                                    conn.commit()
+
+                                            else:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[7] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
+                                                    conn.commit()
+
+                                                else:
+                                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                                                    needdefer = False
+                                                    anywin = False
+                                                    conn.close()
+
+                                        else:
+                                            await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
+                                            needdefer = False
+                                            anywin = False
+                                            conn.close()
+
+                                if select.values[0] == "9":
+                                        tttgame1 = cur.execute(f"""SELECT tttgame FROM `{ctx.user.id}`""").fetchone()
+                                        tttgame = int(''.join(map(str, tttgame1)))
+                                        tttgame = [int(x) for x in str(tttgame)]
+
+                                        if tttgame[8] == 1:
+                                            if tttbot == 3:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[8] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=2""")
+                                                    conn.commit()
+
+                                                elif interaction.user.id == opponentid:
+                                                    tttgame[8] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{opponentid}` SET tttturn=1""")
+                                                    conn.commit()
+
+                                            else:
+                                                if interaction.user.id == ctx.user.id:
+                                                    tttgame[8] = 2
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=1""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=2""")
+                                                    conn.commit()
+
+                                                else:
+                                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                                                    needdefer = False
+                                                    anywin = False
+                                                    conn.close()
+
+                                        else:
+                                            await interaction.response.send_message("This field is occupied! Please choose antoher one. <:crosspong:1134110291311992962>", ephemeral=True)
+                                            needdefer = False
+                                            anywin = False
+                                            conn.close()
+
+                                # 0 1 2
+                                # 3 4 5
+                                # 6 7 8
+
+                                if tttgame[0] == 1:
+                                    one1 = "<:one1:1164986232841982003>"
+
+                                elif tttgame[0] == 2:
+                                    one1 = "<:bluex:1164986327167672361>"
+                                
+                                else:
+                                    one1 = "<:redo:1164986221118902362>"
+
+                                if tttgame[1] == 1:
+                                    two2 = "<:two2:1164986146539970632>"
+
+                                elif tttgame[1] == 2:
+                                    two2 = "<:bluex:1164986327167672361>"
+                                
+                                else:
+                                    two2 = "<:redo:1164986221118902362>"
+
+                                if tttgame[2] == 1:
+                                    three3 = "<:three3:1164986176487305356>"
+
+                                elif tttgame[2] == 2:
+                                    three3 = "<:bluex:1164986327167672361>"
+                                
+                                else:
+                                    three3 = "<:redo:1164986221118902362>"
+
+                                if tttgame[3] == 1:
+                                    four4 = "<:four4:1164986285715365909>"
+
+                                elif tttgame[3] == 2:
+                                    four4 = "<:bluex:1164986327167672361>"
+                                
+                                else:
+                                    four4 = "<:redo:1164986221118902362>"
+
+                                if tttgame[4] == 1:
+                                    five5 = "<:five5:1164986312667967608>"
+
+                                elif tttgame[4] == 2:
+                                    five5 = "<:bluex:1164986327167672361>"
+                                
+                                else:
+                                    five5 = "<:redo:1164986221118902362>"
+
+                                if tttgame[5] == 1:
+                                    six6 = "<:six6:1164986175312896081>"
+
+                                elif tttgame[5] == 2:
+                                    six6 = "<:bluex:1164986327167672361>"
+                                
+                                else:
+                                    six6 = "<:redo:1164986221118902362>"
+
+                                if tttgame[6] == 1:
+                                    seven7 = "<:seven7:1164986188873072660>"
+
+                                elif tttgame[6] == 2:
+                                    seven7 = "<:bluex:1164986327167672361>"
+                                
+                                else:
+                                    seven7 = "<:redo:1164986221118902362>"
+
+                                if tttgame[7] == 1:
+                                    eight8 = "<:eight8:1164986320922361856>"
+
+                                elif tttgame[7] == 2:
+                                    eight8 = "<:bluex:1164986327167672361>"
+                                
+                                else:
+                                    eight8 = "<:redo:1164986221118902362>"
+
+                                if tttgame[8] == 1:
+                                    nine9 = "<:nine9:1164986246884499569>"
+
+                                elif tttgame[8] == 2:
+                                    nine9 = "<:bluex:1164986327167672361>"
+                                
+                                else:
+                                    nine9 = "<:redo:1164986221118902362>"
+
+                                msgtext = f"{one1}<:whitelinevertical:1164986150113513624>{two2}<:whitelinevertical:1164986150113513624>{three3}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{four4}<:whitelinevertical:1164986150113513624>{five5}<:whitelinevertical:1164986150113513624>{six6}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{seven7}<:whitelinevertical:1164986150113513624>{eight8}<:whitelinevertical:1164986150113513624>{nine9}"
+
+                                if tttbot != 3 and anywin:
+                                    conn2 = sq.connect('stats.db')
+                                    cur2 = conn2.cursor()
+
+                                    if tttgame[0] == 2 and tttgame[3] == 2 and tttgame [6] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[1] == 2 and tttgame[4] == 2 and tttgame [7] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+                                        
+                                    elif tttgame[2] == 2 and tttgame[5] == 2 and tttgame [8] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+                                        
+                                    elif tttgame[0] == 2 and tttgame[1] == 2 and tttgame [2] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[3] == 2 and tttgame[4] == 2 and tttgame [5] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[6] == 2 and tttgame[7] == 2 and tttgame [8] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[0] == 2 and tttgame[4] == 2 and tttgame [8] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[2] == 2 and tttgame[4] == 2 and tttgame [6] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT botgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET botgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                elif anywin:
+                                    conn2 = sq.connect('stats.db')
+                                    cur2 = conn2.cursor()
+                                    
+                                    if tttgame[0] == 2 and tttgame[3] == 2 and tttgame [6] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[1] == 2 and tttgame[4] == 2 and tttgame [7] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+                                        
+                                    elif tttgame[2] == 2 and tttgame[5] == 2 and tttgame [8] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+                                        
+                                    elif tttgame[0] == 2 and tttgame[1] == 2 and tttgame [2] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[3] == 2 and tttgame[4] == 2 and tttgame [5] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[6] == 2 and tttgame[7] == 2 and tttgame [8] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[0] == 2 and tttgame[4] == 2 and tttgame [8] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                    elif tttgame[2] == 2 and tttgame[4] == 2 and tttgame [6] == 2:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
+                                        cur.execute(f"""DROP TABLE `{opponentid}`""")
+                                        conn.commit()
+                                        upd1 = cur2.execute(f"""SELECT currentgames FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd -= 1
+                                        cur2.execute(f"""UPDATE main SET currentgames={upd}""")
+                                        conn2.commit()
+                                        conn2.close()
+                                        anywin = False
+                                        await interaction.response.defer()
+
+                                # BOT MOVES
+
+                                if anywin:
+                                    tttbot1 = cur.execute(f"""SELECT tttbot FROM `{ctx.user.id}`""").fetchone()
+                                    tttbot2 = sum(tttbot1)
+                                    tttbot = int(tttbot2)
+
+                                    if tttbot == 2:
+                                        # Look for any possible wins...
+
+                                        # 0
+                                        # 3
+                                        # 6
+
+                                        if tttgame[0] == 3 and tttgame[6] == 3 and tttgame[3] == 1:
+                                            tttgame[3] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[0] == 3 and tttgame[3] == 3 and tttgame[6] == 1:
+                                            tttgame[6] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[6] == 3 and tttgame[3] == 3 and tttgame[0] == 1:
+                                            tttgame[0] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 1
+                                        # 4
+                                        # 7
+
+                                        elif tttgame[1] == 3 and tttgame[4] == 3 and tttgame[7] == 1:
+                                            tttgame[7] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[1] == 3 and tttgame[7] == 3 and tttgame[4] == 1:
+                                            tttgame[4] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[4] == 3 and tttgame[7] == 3 and tttgame[1] == 1:
+                                            tttgame[1] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 2
+                                        # 5
+                                        # 8
+
+                                        elif tttgame[2] == 3 and tttgame[5] == 3 and tttgame[8] == 1:
+                                            tttgame[8] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[2] == 3 and tttgame[8] == 3 and tttgame[5] == 1:
+                                            tttgame[5] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[8] == 3 and tttgame[5] == 3 and tttgame[2] == 1:
+                                            tttgame[2] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 0 1 2
+
+                                        elif tttgame[0] == 3 and tttgame[1] == 3 and tttgame[2] == 1:
+                                            tttgame[2] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[0] == 3 and tttgame[2] == 3 and tttgame[1] == 1:
+                                            tttgame[1] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[2] == 3 and tttgame[1] == 3 and tttgame[0] == 1:
+                                            tttgame[0] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 3 4 5
+
+                                        elif tttgame[3] == 3 and tttgame[4] == 3 and tttgame[5] == 1:
+                                            tttgame[5] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[3] == 3 and tttgame[5] == 3 and tttgame[4] == 1:
+                                            tttgame[4] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[4] == 3 and tttgame[5] == 3 and tttgame[3] == 1:
+                                            tttgame[3] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 6 7 8
+
+                                        elif tttgame[6] == 3 and tttgame[7] == 3 and tttgame[8] == 1:
+                                            tttgame[8] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[6] == 3 and tttgame[8] == 3 and tttgame[7] == 1:
+                                            tttgame[7] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[7] == 3 and tttgame[8] == 3 and tttgame[6] == 1:
+                                            tttgame[6] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 0
+                                        #   4
+                                        #     8
+
+                                        elif tttgame[0] == 3 and tttgame[4] == 3 and tttgame[8] == 1:
+                                            tttgame[8] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[0] == 3 and tttgame[8] == 3 and tttgame[4] == 1:
+                                            tttgame[4] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[4] == 3 and tttgame[8] == 3 and tttgame[0] == 1:
+                                            tttgame[0] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        #     2
+                                        #   4
+                                        # 6
+
+                                        elif tttgame[2] == 3 and tttgame[4] == 3 and tttgame[6] == 1:
+                                            tttgame[6] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[2] == 3 and tttgame[6] == 3 and tttgame[4] == 1:
+                                            tttgame[4] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[4] == 3 and tttgame[6] == 3 and tttgame[2] == 1:
+                                            tttgame[2] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # Defend system
+
+                                        # 0
+                                        # 3
+                                        # 6
+
+                                        elif tttgame[0] == 2 and tttgame[6] == 2 and tttgame[3] == 1:
+                                            tttgame[3] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[0] == 2 and tttgame[3] == 2 and tttgame[6] == 1:
+                                            tttgame[6] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[6] == 2 and tttgame[3] == 2 and tttgame[0] == 1:
+                                            tttgame[0] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 1
+                                        # 4
+                                        # 7
+
+                                        elif tttgame[1] == 2 and tttgame[4] == 2 and tttgame[7] == 1:
+                                            tttgame[7] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[1] == 2 and tttgame[7] == 2 and tttgame[4] == 1:
+                                            tttgame[4] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[4] == 2 and tttgame[7] == 2 and tttgame[1] == 1:
+                                            tttgame[1] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 2
+                                        # 5
+                                        # 8
+
+                                        elif tttgame[2] == 2 and tttgame[5] == 2 and tttgame[8] == 1:
+                                            tttgame[8] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[2] == 2 and tttgame[8] == 2 and tttgame[5] == 1:
+                                            tttgame[5] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[8] == 2 and tttgame[5] == 2 and tttgame[2] == 1:
+                                            tttgame[2] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 0 1 2
+
+                                        elif tttgame[0] == 2 and tttgame[1] == 2 and tttgame[2] == 1:
+                                            tttgame[2] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[0] == 2 and tttgame[2] == 2 and tttgame[1] == 1:
+                                            tttgame[1] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[2] == 2 and tttgame[1] == 2 and tttgame[0] == 1:
+                                            tttgame[0] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 3 4 5
+
+                                        elif tttgame[3] == 2 and tttgame[4] == 2 and tttgame[5] == 1:
+                                            tttgame[5] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[3] == 2 and tttgame[5] == 2 and tttgame[4] == 1:
+                                            tttgame[4] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[4] == 2 and tttgame[5] == 2 and tttgame[3] == 1:
+                                            tttgame[3] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 6 7 8
+
+                                        elif tttgame[6] == 2 and tttgame[7] == 2 and tttgame[8] == 1:
+                                            tttgame[8] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[6] == 2 and tttgame[8] == 2 and tttgame[7] == 1:
+                                            tttgame[7] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[7] == 2 and tttgame[8] == 2 and tttgame[6] == 1:
+                                            tttgame[6] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # 0
+                                        #   4
+                                        #     8
+
+                                        elif tttgame[0] == 2 and tttgame[4] == 2 and tttgame[8] == 1:
+                                            tttgame[8] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[0] == 2 and tttgame[8] == 2 and tttgame[4] == 1:
+                                            tttgame[4] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[4] == 2 and tttgame[8] == 2 and tttgame[0] == 1:
+                                            tttgame[0] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        #     2
+                                        #   4
+                                        # 6
+
+                                        elif tttgame[2] == 2 and tttgame[4] == 2 and tttgame[6] == 1:
+                                            tttgame[6] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[2] == 2 and tttgame[6] == 2 and tttgame[4] == 1:
+                                            tttgame[4] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+                                        elif tttgame[4] == 2 and tttgame[6] == 2 and tttgame[2] == 1:
+                                            tttgame[2] = 3
+                                            tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                            tttgameint = int(tttgameint)
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                            conn.commit()
+
+                                        # If there is nothing to do and there are some empty place(s), pick a random empty field...
+                                        elif 1 in tttgame:
+                                            while True:
+                                                i = random.randint(0,8)
+                                                if tttgame[i] == 1:
+                                                    tttgame[i] = 3
+                                                    tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
+                                                    tttgameint = int(tttgameint)
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
+                                                    cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
+                                                    conn.commit()
+                                                    break
 
                                     if tttgame[0] == 1:
                                         one1 = "<:one1:1164986232841982003>"
@@ -1444,1084 +2273,383 @@ async def ping(ctx):
                                         nine9 = "<:redo:1164986221118902362>"
 
                                     msgtext = f"{one1}<:whitelinevertical:1164986150113513624>{two2}<:whitelinevertical:1164986150113513624>{three3}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{four4}<:whitelinevertical:1164986150113513624>{five5}<:whitelinevertical:1164986150113513624>{six6}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{seven7}<:whitelinevertical:1164986150113513624>{eight8}<:whitelinevertical:1164986150113513624>{nine9}"
+                                    
+                                # 0 1 2
+                                # 3 4 5
+                                # 6 7 8
 
-                                    if tttbot != 3:
-                                        if tttgame[0] == 2 and tttgame[3] == 2 and tttgame [6] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
+                                if tttbot == 3 and anywin:
+                                    conn2 = sq.connect('stats.db')
+                                    cur2 = conn2.cursor()
 
-                                        elif tttgame[1] == 2 and tttgame[4] == 2 and tttgame [7] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-                                            
-                                        elif tttgame[2] == 2 and tttgame[5] == 2 and tttgame [8] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-                                            
-                                        elif tttgame[0] == 2 and tttgame[1] == 2 and tttgame [2] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
+                                    if tttgame[0] == 3 and tttgame[3] == 3 and tttgame [6] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.close()
 
-                                        elif tttgame[3] == 2 and tttgame[4] == 2 and tttgame [5] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
+                                    elif tttgame[1] == 3 and tttgame[4] == 3 and tttgame [7] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.close()
 
-                                        elif tttgame[6] == 2 and tttgame[7] == 2 and tttgame [8] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
+                                    elif tttgame[2] == 3 and tttgame[5] == 3 and tttgame [8] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.close()
 
-                                        elif tttgame[0] == 2 and tttgame[4] == 2 and tttgame [8] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
+                                    elif tttgame[0] == 3 and tttgame[1] == 3 and tttgame [2] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.close()
 
-                                        elif tttgame[2] == 2 and tttgame[4] == 2 and tttgame [6] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
+                                    elif tttgame[3] == 3 and tttgame[4] == 3 and tttgame [5] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.close()
+
+                                    elif tttgame[6] == 3 and tttgame[7] == 3 and tttgame [8] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.close()
+
+                                    elif tttgame[0] == 3 and tttgame[4] == 3 and tttgame [8] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.close()
+
+                                    elif tttgame[2] == 3 and tttgame[4] == 3 and tttgame [6] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.close()
+
+                                    elif not 1 in tttgame:
+                                        self.disable_all_items()
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
+                                        cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await interaction.message.edit(f"It's draw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛\n\n{one1}<:whitelinevertical:1164986150113513624>{two2}<:whitelinevertical:1164986150113513624>{three3}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{four4}<:whitelinevertical:1164986150113513624>{five5}<:whitelinevertical:1164986150113513624>{six6}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{seven7}<:whitelinevertical:1164986150113513624>{eight8}<:whitelinevertical:1164986150113513624>{nine9}", view=self)
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.close()
 
                                     else:
-                                        if tttgame[0] == 2 and tttgame[3] == 2 and tttgame [6] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-
-                                        elif tttgame[1] == 2 and tttgame[4] == 2 and tttgame [7] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-                                            
-                                        elif tttgame[2] == 2 and tttgame[5] == 2 and tttgame [8] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-                                            
-                                        elif tttgame[0] == 2 and tttgame[1] == 2 and tttgame [2] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-
-                                        elif tttgame[3] == 2 and tttgame[4] == 2 and tttgame [5] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-
-                                        elif tttgame[6] == 2 and tttgame[7] == 2 and tttgame [8] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-
-                                        elif tttgame[0] == 2 and tttgame[4] == 2 and tttgame [8] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-
-                                        elif tttgame[2] == 2 and tttgame[4] == 2 and tttgame [6] == 2:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{ctx.user.id}> won! This user won this match as well! Congratulations! 🏆<:bluex:1164986327167672361>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""DROP TABLE `{ctx.user.id}`""")
-                                            cur.execute(f"""DROP TABLE `{opponentid}`""")
-                                            conn.commit()
-                                            anywin = False
-                                            await interaction.response.defer()
-
-                                    # BOT MOVES
-
-                                    if anywin:
-                                        tttbot1 = cur.execute(f"""SELECT tttbot FROM `{ctx.user.id}`""").fetchone()
-                                        tttbot2 = sum(tttbot1)
-                                        tttbot = int(tttbot2)
-
-                                        if tttbot == 2:
-                                            # Look for any possible wins...
-
-                                            # 0
-                                            # 3
-                                            # 6
-
-                                            if tttgame[0] == 3 and tttgame[6] == 3 and tttgame[3] == 1:
-                                                tttgame[3] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[0] == 3 and tttgame[3] == 3 and tttgame[6] == 1:
-                                                tttgame[6] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[6] == 3 and tttgame[3] == 3 and tttgame[0] == 1:
-                                                tttgame[0] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 1
-                                            # 4
-                                            # 7
-
-                                            elif tttgame[1] == 3 and tttgame[4] == 3 and tttgame[7] == 1:
-                                                tttgame[7] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[1] == 3 and tttgame[7] == 3 and tttgame[4] == 1:
-                                                tttgame[4] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[4] == 3 and tttgame[7] == 3 and tttgame[1] == 1:
-                                                tttgame[1] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 2
-                                            # 5
-                                            # 8
-
-                                            elif tttgame[2] == 3 and tttgame[5] == 3 and tttgame[8] == 1:
-                                                tttgame[8] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[2] == 3 and tttgame[8] == 3 and tttgame[5] == 1:
-                                                tttgame[5] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[8] == 3 and tttgame[5] == 3 and tttgame[2] == 1:
-                                                tttgame[2] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 0 1 2
-
-                                            elif tttgame[0] == 3 and tttgame[1] == 3 and tttgame[2] == 1:
-                                                tttgame[2] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[0] == 3 and tttgame[2] == 3 and tttgame[1] == 1:
-                                                tttgame[1] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[2] == 3 and tttgame[1] == 3 and tttgame[0] == 1:
-                                                tttgame[0] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 3 4 5
-
-                                            elif tttgame[3] == 3 and tttgame[4] == 3 and tttgame[5] == 1:
-                                                tttgame[5] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[3] == 3 and tttgame[5] == 3 and tttgame[4] == 1:
-                                                tttgame[4] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[4] == 3 and tttgame[5] == 3 and tttgame[3] == 1:
-                                                tttgame[3] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 6 7 8
-
-                                            elif tttgame[6] == 3 and tttgame[7] == 3 and tttgame[8] == 1:
-                                                tttgame[8] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[6] == 3 and tttgame[8] == 3 and tttgame[7] == 1:
-                                                tttgame[7] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[7] == 3 and tttgame[8] == 3 and tttgame[6] == 1:
-                                                tttgame[6] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 0
-                                            #   4
-                                            #     8
-
-                                            elif tttgame[0] == 3 and tttgame[4] == 3 and tttgame[8] == 1:
-                                                tttgame[8] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[0] == 3 and tttgame[8] == 3 and tttgame[4] == 1:
-                                                tttgame[4] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[4] == 3 and tttgame[8] == 3 and tttgame[0] == 1:
-                                                tttgame[0] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            #     2
-                                            #   4
-                                            # 6
-
-                                            elif tttgame[2] == 3 and tttgame[4] == 3 and tttgame[6] == 1:
-                                                tttgame[6] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[2] == 3 and tttgame[6] == 3 and tttgame[4] == 1:
-                                                tttgame[4] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[4] == 3 and tttgame[6] == 3 and tttgame[2] == 1:
-                                                tttgame[2] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # Defend system
-
-                                            # 0
-                                            # 3
-                                            # 6
-
-                                            elif tttgame[0] == 2 and tttgame[6] == 2 and tttgame[3] == 1:
-                                                tttgame[3] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[0] == 2 and tttgame[3] == 2 and tttgame[6] == 1:
-                                                tttgame[6] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[6] == 2 and tttgame[3] == 2 and tttgame[0] == 1:
-                                                tttgame[0] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 1
-                                            # 4
-                                            # 7
-
-                                            elif tttgame[1] == 2 and tttgame[4] == 2 and tttgame[7] == 1:
-                                                tttgame[7] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[1] == 2 and tttgame[7] == 2 and tttgame[4] == 1:
-                                                tttgame[4] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[4] == 2 and tttgame[7] == 2 and tttgame[1] == 1:
-                                                tttgame[1] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 2
-                                            # 5
-                                            # 8
-
-                                            elif tttgame[2] == 2 and tttgame[5] == 2 and tttgame[8] == 1:
-                                                tttgame[8] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[2] == 2 and tttgame[8] == 2 and tttgame[5] == 1:
-                                                tttgame[5] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[8] == 2 and tttgame[5] == 2 and tttgame[2] == 1:
-                                                tttgame[2] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 0 1 2
-
-                                            elif tttgame[0] == 2 and tttgame[1] == 2 and tttgame[2] == 1:
-                                                tttgame[2] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[0] == 2 and tttgame[2] == 2 and tttgame[1] == 1:
-                                                tttgame[1] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[2] == 2 and tttgame[1] == 2 and tttgame[0] == 1:
-                                                tttgame[0] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 3 4 5
-
-                                            elif tttgame[3] == 2 and tttgame[4] == 2 and tttgame[5] == 1:
-                                                tttgame[5] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[3] == 2 and tttgame[5] == 2 and tttgame[4] == 1:
-                                                tttgame[4] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[4] == 2 and tttgame[5] == 2 and tttgame[3] == 1:
-                                                tttgame[3] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 6 7 8
-
-                                            elif tttgame[6] == 2 and tttgame[7] == 2 and tttgame[8] == 1:
-                                                tttgame[8] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[6] == 2 and tttgame[8] == 2 and tttgame[7] == 1:
-                                                tttgame[7] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[7] == 2 and tttgame[8] == 2 and tttgame[6] == 1:
-                                                tttgame[6] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # 0
-                                            #   4
-                                            #     8
-
-                                            elif tttgame[0] == 2 and tttgame[4] == 2 and tttgame[8] == 1:
-                                                tttgame[8] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[0] == 2 and tttgame[8] == 2 and tttgame[4] == 1:
-                                                tttgame[4] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[4] == 2 and tttgame[8] == 2 and tttgame[0] == 1:
-                                                tttgame[0] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            #     2
-                                            #   4
-                                            # 6
-
-                                            elif tttgame[2] == 2 and tttgame[4] == 2 and tttgame[6] == 1:
-                                                tttgame[6] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[2] == 2 and tttgame[6] == 2 and tttgame[4] == 1:
-                                                tttgame[4] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-                                            elif tttgame[4] == 2 and tttgame[6] == 2 and tttgame[2] == 1:
-                                                tttgame[2] = 3
-                                                tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                tttgameint = int(tttgameint)
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                conn.commit()
-
-                                            # If there is nothing to do and there are some empty place(s), pick a random empty field...
-                                            elif 1 in tttgame:
-                                                while True:
-                                                    i = random.randint(0,8)
-                                                    if tttgame[i] == 1:
-                                                        tttgame[i] = 3
-                                                        tttgameint = f"{tttgame[0]}{tttgame[1]}{tttgame[2]}{tttgame[3]}{tttgame[4]}{tttgame[5]}{tttgame[6]}{tttgame[7]}{tttgame[8]}"
-                                                        tttgameint = int(tttgameint)
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame={tttgameint}""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=2""")
-                                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttbot=1""")
-                                                        conn.commit()
-                                                        break
-
-                                        if tttgame[0] == 1:
-                                            one1 = "<:one1:1164986232841982003>"
-
-                                        elif tttgame[0] == 2:
-                                            one1 = "<:bluex:1164986327167672361>"
-                                        
-                                        else:
-                                            one1 = "<:redo:1164986221118902362>"
-
-                                        if tttgame[1] == 1:
-                                            two2 = "<:two2:1164986146539970632>"
-
-                                        elif tttgame[1] == 2:
-                                            two2 = "<:bluex:1164986327167672361>"
-                                        
-                                        else:
-                                            two2 = "<:redo:1164986221118902362>"
-
-                                        if tttgame[2] == 1:
-                                            three3 = "<:three3:1164986176487305356>"
-
-                                        elif tttgame[2] == 2:
-                                            three3 = "<:bluex:1164986327167672361>"
-                                        
-                                        else:
-                                            three3 = "<:redo:1164986221118902362>"
-
-                                        if tttgame[3] == 1:
-                                            four4 = "<:four4:1164986285715365909>"
-
-                                        elif tttgame[3] == 2:
-                                            four4 = "<:bluex:1164986327167672361>"
-                                        
-                                        else:
-                                            four4 = "<:redo:1164986221118902362>"
-
-                                        if tttgame[4] == 1:
-                                            five5 = "<:five5:1164986312667967608>"
-
-                                        elif tttgame[4] == 2:
-                                            five5 = "<:bluex:1164986327167672361>"
-                                        
-                                        else:
-                                            five5 = "<:redo:1164986221118902362>"
-
-                                        if tttgame[5] == 1:
-                                            six6 = "<:six6:1164986175312896081>"
-
-                                        elif tttgame[5] == 2:
-                                            six6 = "<:bluex:1164986327167672361>"
-                                        
-                                        else:
-                                            six6 = "<:redo:1164986221118902362>"
-
-                                        if tttgame[6] == 1:
-                                            seven7 = "<:seven7:1164986188873072660>"
-
-                                        elif tttgame[6] == 2:
-                                            seven7 = "<:bluex:1164986327167672361>"
-                                        
-                                        else:
-                                            seven7 = "<:redo:1164986221118902362>"
-
-                                        if tttgame[7] == 1:
-                                            eight8 = "<:eight8:1164986320922361856>"
-
-                                        elif tttgame[7] == 2:
-                                            eight8 = "<:bluex:1164986327167672361>"
-                                        
-                                        else:
-                                            eight8 = "<:redo:1164986221118902362>"
-
-                                        if tttgame[8] == 1:
-                                            nine9 = "<:nine9:1164986246884499569>"
-
-                                        elif tttgame[8] == 2:
-                                            nine9 = "<:bluex:1164986327167672361>"
-                                        
-                                        else:
-                                            nine9 = "<:redo:1164986221118902362>"
-
-                                        msgtext = f"{one1}<:whitelinevertical:1164986150113513624>{two2}<:whitelinevertical:1164986150113513624>{three3}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{four4}<:whitelinevertical:1164986150113513624>{five5}<:whitelinevertical:1164986150113513624>{six6}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{seven7}<:whitelinevertical:1164986150113513624>{eight8}<:whitelinevertical:1164986150113513624>{nine9}"
-                                        
-                                    # 0 1 2
-                                    # 3 4 5
-                                    # 6 7 8
-
-                                    if tttbot == 3 and anywin:
-                                        if tttgame[0] == 3 and tttgame[3] == 3 and tttgame [6] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.close()
-
-                                        elif tttgame[1] == 3 and tttgame[4] == 3 and tttgame [7] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.close()
-
-                                        elif tttgame[2] == 3 and tttgame[5] == 3 and tttgame [8] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.close()
-
-                                        elif tttgame[0] == 3 and tttgame[1] == 3 and tttgame [2] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.close()
-
-                                        elif tttgame[3] == 3 and tttgame[4] == 3 and tttgame [5] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.close()
-
-                                        elif tttgame[6] == 3 and tttgame[7] == 3 and tttgame [8] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.close()
-
-                                        elif tttgame[0] == 3 and tttgame[4] == 3 and tttgame [8] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.close()
-
-                                        elif tttgame[2] == 3 and tttgame[4] == 3 and tttgame [6] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"<@{opponentid}> won and it's this user's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.close()
-
-                                        elif not 1 in tttgame:
-                                            self.disable_all_items()
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET tttturn=0""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=0""")
-                                            cur.execute(f"""UPDATE `{opponentid}` SET turn=1""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await interaction.message.edit(f"It's draw! Now it's <@{opponentid}>'s turn to ping a ball! 🤜🤛\n\n{one1}<:whitelinevertical:1164986150113513624>{two2}<:whitelinevertical:1164986150113513624>{three3}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{four4}<:whitelinevertical:1164986150113513624>{five5}<:whitelinevertical:1164986150113513624>{six6}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{seven7}<:whitelinevertical:1164986150113513624>{eight8}<:whitelinevertical:1164986150113513624>{nine9}", view=self)
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.close()
-
-                                        else:
-                                            await interaction.message.edit(msgtext)
-                                            conn.close()
-                                            conn2.close()
-
-                                        if needdefer:
-                                            await interaction.response.defer()
-
-                                    elif anywin:
-                                        if tttgame[0] == 3 and tttgame[3] == 3 and tttgame [6] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await ctx.respond("Pong! 🏓")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.commit()
-                                            conn2.close()
-
-                                        elif tttgame[1] == 3 and tttgame[4] == 3 and tttgame [7] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await ctx.respond("Pong! 🏓")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.commit()
-                                            conn2.close()
-
-                                        elif tttgame[2] == 3 and tttgame[5] == 3 and tttgame [8] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await ctx.respond("Pong! 🏓")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.commit()
-                                            conn2.close()
-
-                                        elif tttgame[0] == 3 and tttgame[1] == 3 and tttgame [2] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await ctx.respond("Pong! 🏓")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.commit()
-                                            conn2.close()
-
-                                        elif tttgame[3] == 3 and tttgame[4] == 3 and tttgame [5] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await ctx.respond("Pong! 🏓")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.commit()
-                                            conn2.close()
-
-                                        elif tttgame[6] == 3 and tttgame[7] == 3 and tttgame [8] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await ctx.respond("Pong! 🏓")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.commit()
-                                            conn2.close()
-
-                                        elif tttgame[0] == 3 and tttgame[4] == 3 and tttgame [8] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await ctx.respond("Pong! 🏓")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.commit()
-                                            conn2.close()
-
-                                        elif tttgame[2] == 3 and tttgame[4] == 3 and tttgame [6] == 3:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await ctx.respond("Pong! 🏓")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.commit()
-                                            conn2.close()
-
-                                        elif not 1 in tttgame:
-                                            self.disable_all_items()
-                                            await interaction.message.edit(f"It's draw! Now it's bot's turn to ping a ball! 🤜🤛\n\n{one1}<:whitelinevertical:1164986150113513624>{two2}<:whitelinevertical:1164986150113513624>{three3}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{four4}<:whitelinevertical:1164986150113513624>{five5}<:whitelinevertical:1164986150113513624>{six6}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{seven7}<:whitelinevertical:1164986150113513624>{eight8}<:whitelinevertical:1164986150113513624>{nine9}", view=self)
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
-                                            upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
-                                            upd2 = sum(upd1)
-                                            upd = int(upd2)
-                                            upd += 1
-                                            cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
-                                            await ctx.respond("Pong! 🏓")
-                                            cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
-                                            conn.commit()
-                                            conn.close()
-                                            conn2.commit()
-                                            conn2.close()
-
-                                        else:
-                                            await interaction.message.edit(msgtext)
-                                            conn.close()
-                                            conn2.close()
-
-                                        if needdefer:
-                                            await interaction.response.defer()
-
-                                else:
-                                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
-                                    conn.close()
-                                    conn2.close()
-                                    consoleclear()
+                                        await interaction.message.edit(msgtext)
+                                        conn.close()
+                                        conn2.close()
+
+                                    if needdefer:
+                                        await interaction.response.defer()
+
+                                elif anywin:
+                                    conn2 = sq.connect('stats.db')
+                                    cur2 = conn2.cursor()
+
+                                    if tttgame[0] == 3 and tttgame[3] == 3 and tttgame [6] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await ctx.respond("Pong! 🏓")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.commit()
+                                        conn2.close()
+
+                                    elif tttgame[1] == 3 and tttgame[4] == 3 and tttgame [7] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await ctx.respond("Pong! 🏓")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.commit()
+                                        conn2.close()
+
+                                    elif tttgame[2] == 3 and tttgame[5] == 3 and tttgame [8] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await ctx.respond("Pong! 🏓")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.commit()
+                                        conn2.close()
+
+                                    elif tttgame[0] == 3 and tttgame[1] == 3 and tttgame [2] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await ctx.respond("Pong! 🏓")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.commit()
+                                        conn2.close()
+
+                                    elif tttgame[3] == 3 and tttgame[4] == 3 and tttgame [5] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await ctx.respond("Pong! 🏓")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.commit()
+                                        conn2.close()
+
+                                    elif tttgame[6] == 3 and tttgame[7] == 3 and tttgame [8] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await ctx.respond("Pong! 🏓")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.commit()
+                                        conn2.close()
+
+                                    elif tttgame[0] == 3 and tttgame[4] == 3 and tttgame [8] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await ctx.respond("Pong! 🏓")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.commit()
+                                        conn2.close()
+
+                                    elif tttgame[2] == 3 and tttgame[4] == 3 and tttgame [6] == 3:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"Bot won! Now it's bot's turn to ping a ball! 🏓<:redo:1164986221118902362>\n\n{msgtext}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await ctx.respond("Pong! 🏓")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.commit()
+                                        conn2.close()
+
+                                    elif not 1 in tttgame:
+                                        self.disable_all_items()
+                                        await interaction.message.edit(f"It's draw! Now it's bot's turn to ping a ball! 🤜🤛\n\n{one1}<:whitelinevertical:1164986150113513624>{two2}<:whitelinevertical:1164986150113513624>{three3}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{four4}<:whitelinevertical:1164986150113513624>{five5}<:whitelinevertical:1164986150113513624>{six6}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{seven7}<:whitelinevertical:1164986150113513624>{eight8}<:whitelinevertical:1164986150113513624>{nine9}", view=self)
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttgame=111111111""")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET tttturn=0""")
+                                        upd1 = cur2.execute(f"""SELECT ballspinged FROM main""").fetchone()
+                                        upd2 = sum(upd1)
+                                        upd = int(upd2)
+                                        upd += 1
+                                        cur2.execute(f"""UPDATE main SET ballspinged={upd}""")
+                                        await ctx.respond("Pong! 🏓")
+                                        cur.execute(f"""UPDATE `{ctx.user.id}` SET turn=1""")
+                                        conn.commit()
+                                        conn.close()
+                                        conn2.commit()
+                                        conn2.close()
+
+                                    else:
+                                        await interaction.message.edit(msgtext)
+                                        conn.close()
+                                        conn2.close()
+
+                                    if needdefer:
+                                        await interaction.response.defer()
 
                             else:
                                 await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
                                 conn.close()
-                                conn2.close()
                                 consoleclear()
 
                         else:
-                            await interaction.response.send_message("Sorry, but it's not your turn. <:crosspong:1134110291311992962>", ephemeral=True)
+                            await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
                             conn.close()
-                            conn2.close()
                             consoleclear()
 
-                    except:
-                        await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game, it's your turn or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                    else:
+                        await interaction.response.send_message("Sorry, but it's not your turn. <:crosspong:1134110291311992962>", ephemeral=True)
                         conn.close()
-                        conn2.close()
                         consoleclear()
 
-            inter = await ctx.respond(f"__**TIC-TAC-TOE TIME!**__ <:bluex:1164986327167672361><:redo:1164986221118902362>\n\nIf <@{ctx.user.id}> wins, the minigame ends and this user wins this match. Other situations ends with <@{opponentid}>'s turn. <@{ctx.user.id}> is playing with <:bluex:1164986327167672361> and <@{opponentid}> is playing with <:redo:1164986221118902362>. <@{ctx.user.id}> starts first. <:circlepong:1134110288438894654>\n\n{one1}<:whitelinevertical:1164986150113513624>{two2}<:whitelinevertical:1164986150113513624>{three3}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{four4}<:whitelinevertical:1164986150113513624>{five5}<:whitelinevertical:1164986150113513624>{six6}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{seven7}<:whitelinevertical:1164986150113513624>{eight8}<:whitelinevertical:1164986150113513624>{nine9}", view=menuView())
-            originalmsg = await inter.original_response()
-            cur.execute(f"""UPDATE `{ctx.user.id}` SET lastminigameid={originalmsg.id}""")
+                except:
+                    await interaction.response.send_message("Sorry, but this action is not valid. Please check if you are playing this game, it's your turn or your opponent didn't leave the match. <:crosspong:1134110291311992962>", ephemeral=True)
+                    conn.close()
+                    consoleclear()
 
-            tttbot1 = cur.execute(f"""SELECT tttbot FROM `{ctx.user.id}`""").fetchone()
-            tttbot2 = sum(tttbot1)
-            tttbot = int(tttbot2)
+        inter = await ctx.respond(f"__**TIC-TAC-TOE TIME!**__ <:bluex:1164986327167672361><:redo:1164986221118902362>\n\nIf <@{ctx.user.id}> wins, the minigame ends and this user wins this match. Other situations ends with <@{opponentid}>'s turn. <@{ctx.user.id}> is playing with <:bluex:1164986327167672361> and <@{opponentid}> is playing with <:redo:1164986221118902362>. <@{ctx.user.id}> starts first. <:circlepong:1134110288438894654>\n\n{one1}<:whitelinevertical:1164986150113513624>{two2}<:whitelinevertical:1164986150113513624>{three3}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{four4}<:whitelinevertical:1164986150113513624>{five5}<:whitelinevertical:1164986150113513624>{six6}\n<:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308><:whiteplus:1164986151849959495><:whitelinehorizontal:1164986148205109308>\n{seven7}<:whitelinevertical:1164986150113513624>{eight8}<:whitelinevertical:1164986150113513624>{nine9}", view=menuView())
+        originalmsg = await inter.original_response()
+        cur.execute(f"""UPDATE `{ctx.user.id}` SET lastminigameid={originalmsg.id}""")
 
-            if tttbot == 3:
-                cur.execute(f"""UPDATE `{opponentid}` SET lastminigameid={originalmsg.id}""")
-            
-            conn.commit()
-            conn.close()
+        tttbot1 = cur.execute(f"""SELECT tttbot FROM `{ctx.user.id}`""").fetchone()
+        tttbot2 = sum(tttbot1)
+        tttbot = int(tttbot2)
 
-        except:
-            # I'll use this to print errors.
-            pass
+        if tttbot == 3:
+            cur.execute(f"""UPDATE `{opponentid}` SET lastminigameid={originalmsg.id}""")
+        
+        conn.commit()
+        conn.close()
     
     try:
         isply = curso.execute(f"""SELECT isplaying FROM `{ctx.user.id}`""").fetchone()
@@ -2549,7 +2677,7 @@ async def ping(ctx):
         tttturn = int(ttt2)
 
         gameover = random.randint(6,25)
-        gamegen = random.randint(3,7)
+        gamegen = 5#random.randint(3,7)
 
         if isplaying2 == 1:
             if opponentid2 != bot.user.id:
