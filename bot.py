@@ -1,6 +1,6 @@
 ###### DisPong by @glitchedlime ######
 
-# Last changes: 21. October 2023
+# Last changes: 22. October 2023
 # Commands count: 7
 # Bot's version: v1.3
 
@@ -2912,8 +2912,7 @@ async def singleplayer(ctx):
 
 @bot.slash_command(description="Get started playing with DisPong.")
 async def help(ctx):
-    showcase = discord.File("showcase.gif")
-    await ctx.respond("Hello! Thank you for using my bot! I coded this bot in Python with Pycord library. Since this is an open-source bot, the script is available on GitHub. Also, there is another version of the bot: without minigames. Join the support server below if you are interested in one of these things.\n\nIf you are using DisPong for the first time, I recommend you watching the gif below.\n\nCurrent commands:\n</help:999334780732719244> - This message.\n</ping:999267081629487196> - Play Ping Pong.\n</duel:1085970985552978033> - Start new game with antoher player.\n</finish:999267081629487195> - Delete your request or finish a game.\n</singleplayer:1085970985552978034> - Play with the bot.\n</changelog:1085970985552978035> - DisPong updates log.\n</stats:1134139510070980648> - Games statistics.\n\nThat's all! I really hope you'll like my bot! If you need some help, want to report a bug, suggest something, or just want to play with others, join our support server: https://discord.gg/dduRC6cdy3", file=showcase)
+    await ctx.respond("Hello! Thank you for using my bot! I coded this bot in Python with Pycord library. Since this is an open-source bot, the script is available on GitHub. Also, there is another version of the bot: without minigames. Join the support server below if you are interested in one of these things.\n\nIf you are using DisPong for the first time, I recommend you watching this gif: *https://imgur.com/IxYTF7a*.\n\nCurrent commands:\n</help:999334780732719244> - This message.\n</ping:999267081629487196> - Play Ping Pong.\n</duel:1085970985552978033> - Start new game with antoher player.\n</finish:999267081629487195> - Delete your request or finish a game.\n</singleplayer:1085970985552978034> - Play with the bot.\n</changelog:1085970985552978035> - DisPong updates log.\n</stats:1134139510070980648> - Games statistics.\n\nThat's all! I really hope you'll like my bot! If you need some help, want to report a bug, suggest something, or just want to play with others, join our support server: https://discord.gg/dduRC6cdy3")
     
 # Changelog command (v1.0)
 
