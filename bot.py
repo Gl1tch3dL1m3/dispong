@@ -28,7 +28,7 @@ async def on_ready():
 # Console clear (Linux: replace 'cls' with 'clear')
 
 def consoleclear():
-    pass
+    os.system("cls")
     
 # Duel command (v1.0)
 
