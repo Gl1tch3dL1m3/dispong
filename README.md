@@ -1,4 +1,4 @@
-# DisPong v1.3
+# DisPong v1.4
 Welcome to DisPong's code!
 
 * You are allowed to use, modify and do whatever you want with this code, but do not steal it! More information in the license file.
